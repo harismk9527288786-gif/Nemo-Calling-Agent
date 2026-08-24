@@ -1,0 +1,66 @@
+{
+  "business": {
+    "name": "SK Furniture Market",
+    "owner_or_brand": "SK Furniture",
+    "instagram": "@skfurnituremarket",
+    "location": {
+      "address": "Shop No. 50 & 51, Purna Shanti Heights, Khartan Road, Jambli Naka, Thane West, Maharashtra 400601",
+      "landmark": "Near Jambli Naka / Khartan Road, just minutes from Thane Railway Station",
+      "city": "Thane West / Mumbai Region",
+      "parking": "Customer parking available",
+      "timings": "10:30 AM to 9:30 PM (Open all 7 days)"
+    },
+    "contact": {
+      "phone": "+91 8433870901",
+      "alternate_phone": "+91 9167870901",
+      "whatsapp": "+91 8433870901"
+    }
+  },
+  "sales_assistant": {
+    "name": "Rahul",
+    "persona": "Energetic, warm, and highly respectful sales executive representing SK Furniture Market Thane. Speaks natural conversational Mumbai/Thane style Hinglish."
+  },
+  "products_and_pricing": [
+    {
+      "category": "L-Shape Sofas & Sectional Couches",
+      "starting_price": "₹12,999",
+      "features": "Premium high-density foam, 150+ washable velvet, suede & leatherette colors, solid Salwood frame.",
+      "warranty": "5-year structural warranty"
+    },
+    {
+      "category": "Sofa-cum-Beds & Recliners",
+      "starting_price": "₹14,999",
+      "features": "Smooth folding mechanism, space-saving designs for Mumbai/Thane flats, ultra-comfortable seating.",
+      "warranty": "3-year mechanism warranty"
+    },
+    {
+      "category": "King & Queen Size Storage Beds",
+      "starting_price": "₹13,999",
+      "features": "Heavy-duty hydraulic lift-up storage, cushioned designer headboards, termite-resistant finish.",
+      "warranty": "5-year warranty"
+    },
+    {
+      "category": "Sliding Wardrobes & Modular Almirahs",
+      "starting_price": "₹11,499",
+      "features": "2-door and 3-door sliding options, attached dressing mirror, scratch-proof glossy/matte laminates.",
+      "warranty": "3-year hardware warranty"
+    },
+    {
+      "category": "Solid Wood Dining Table Sets",
+      "starting_price": "₹15,999 (4-seater) / ₹22,999 (6-seater)",
+      "features": "Pure Sheesham / Teak wood, tempered glass and Italian marble top options.",
+      "warranty": "5-year wood guarantee"
+    }
+  ],
+  "special_offers": {
+    "instagram_deal": "Special discount & best factory-direct price for callers who saw our Instagram Reels on @skfurnituremarket.",
+    "delivery": "Fast home delivery and professional installation across Thane, Mumbai, Navi Mumbai, and Kalyan.",
+    "customization": "100% customized size, color, and fabric made on order within 4-5 days.",
+    "financing": "Easy 0% EMI available on Bajaj Finserv, Kotak, and all major Credit/Debit Cards."
+  },
+  "common_faqs": {
+    "how_to_reach": "Shop Thane West mein Khartan Road, Jambli Naka par hai, Thane Station se sirf 5 minute ka rasta hai.",
+    "catalog_request": "Offer to immediately send the latest 2026 PDF photo catalog and Google Maps shop location to their WhatsApp number (+91 8433870901).",
+    "best_price_promise": "Assure the caller of the lowest factory-direct wholesale rates in Thane with EMI facility and invite them to visit the showroom."
+  }
+}

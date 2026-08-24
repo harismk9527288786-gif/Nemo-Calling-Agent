@@ -7,3 +7,17 @@ __pycache__/
 core.*
 client_logs/
 .venv/
+
+# Secrets - never commit API keys
+*_api_key.txt
+.env
+.env.*
+
+# Model weights / checkpoints (large binaries)
+models/
+*.nemo
+*.gguf
+*.onnx
+
+# Audio artifacts (existing sample wavs are tracked explicitly via `git add -f`)
+*.wav
