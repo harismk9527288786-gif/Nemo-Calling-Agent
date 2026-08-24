@@ -146,6 +146,15 @@ The first step is instrumentation and a repeatable benchmark, because it costs l
 
 Steps one and two are safe to do together and I would expect them to be quick. Step three is the one that genuinely changes the shape of `agent.py` and deserves its own review before and after.
 
+### Progress: steps 1 and 2 done (2026-08-24)
+
+Steps one and two are implemented and byte-compile clean. Step one added `pipeline_metrics.py` (per-turn timeline instrumentation, gated by `NEMO_AGENT_METRICS`, writes JSONL to the already-ignored `client_logs/`) and `bench_pipeline.py` (a microphone-free benchmark that paces a wav through the ASR in real time and separately times Gemini Live first-audio). `agent.py` now records a `TurnMetrics` per turn without altering any turn-taking behaviour: the marks are recorded alongside the existing decisions, and the energy-only `last_voice` mark is kept deliberately separate from the partial-bumped `last_speech_time` so the summary can quantify how much ASR lag inflates the silence window.
+
+Step two fixed the `finish_stream` generator bug in `nemo_asr.py` (it is now a plain function returning a list, with a new `final_transcript()` convenience wrapper) and wired it into `agent.py`, which now consumes the flushed, postprocessed final transcript and falls back to the interim only if the flush raises or yields nothing. Critically, `start_stream` is called on the path *after* the flush regardless of whether the flush raised, so a flush failure degrades to interim text for one turn rather than leaving the recognizer dead for the rest of the call.
+
+The benchmark's real-time pacing sleeps to each chunk's **end** (a capture device only releases a fully-recorded chunk), and RTF now sums push and drain CPU while also reporting decode-only RTF, since `push_audio` merely buffers and `poll_results` does the compute. The "Before" column below must be filled on the target machine — the DLL, the model and the Gemini key only exist there; nothing in this sandbox can produce a real number.
+
+
 ---
 
 ## Benchmark to record before and after each step
@@ -164,6 +173,20 @@ Steps one and two are safe to do together and I would expect them to be quick. S
 | Dropped chunks | | |
 
 The row that matters most is the first, and it currently has no value in either column.
+
+### How to record it
+
+Two commands, both on the target machine. The first needs no network and no API key:
+
+```
+python bench_pipeline.py --stage asr --wav test.wav --label "before step 3"
+python bench_pipeline.py --stage gemini --runs 5
+```
+
+That fills the ASR and Gemini rows and prints a pasteable markdown block. The end-to-end row cannot come from the benchmark — it only exists during a real call, so place one call, talk for a few turns, then press Ctrl+C. `agent.py` prints a p50/p95 table per stage on exit and leaves the per-turn records in `client_logs/latency_<timestamp>_<call_id>.jsonl`. Set `NEMO_AGENT_METRICS=0` to turn all of it off.
+
+Two things to check on that first instrumented call, because they are the audit's predictions and this is the run that confirms or refutes them. First, whether "Flushed ASR final used on N/N turns" reports every turn — if it does, the flush fix is live and the agent is finally acting on postprocessed text. Second, how far the median end-of-turn delay overshoots the configured 300 ms silence window; the summary prints that subtraction explicitly, and a large overshoot is the partial-driven timer bumping that step five removes.
+
 
 ---
 

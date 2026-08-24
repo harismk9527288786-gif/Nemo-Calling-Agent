@@ -257,9 +257,49 @@ class NeMoStreamingASR:
             yield is_final, text
 
     def finish_stream(self):
-        if self._stream:
-            _lib.nemo_speech_asr_stream_finish(self._stream)
-            yield from self.poll_results()
+        """Flush the tail of the stream and return the drained results.
+
+        This is deliberately NOT a generator. It used to contain a bare
+        ``yield from self.poll_results()``, which made the whole function a
+        generator function -- so calling ``asr.finish_stream()`` without
+        iterating the result created a generator, discarded it, and never
+        executed a single line of the body. The underlying
+        ``nemo_speech_asr_stream_finish`` was therefore never invoked.
+
+        That silently cost us, on every turn: the last <250ms of buffered
+        audio, any tail tokens the greedy RNNT head was still holding,
+        end-of-utterance punctuation, and ALL postprocessing (PnC/ITN) --
+        interim results bypass postprocessing entirely. The agent was acting
+        on raw interim text throughout.
+
+        Returns a list of ``(is_final, transcript)`` tuples so callers cannot
+        accidentally reintroduce the lazy-evaluation bug.
+        """
+        if not self._stream:
+            return []
+
+        status = _lib.nemo_speech_asr_stream_finish(self._stream)
+        if status != 0:
+            err = _lib.nemo_speech_asr_last_error()
+            raise RuntimeError(
+                f"Failed to finish ASR stream: {err.decode('utf-8') if err else status}"
+            )
+
+        return list(self.poll_results())
+
+    def final_transcript(self):
+        """Flush the stream and return the best final transcript, or "".
+
+        Convenience wrapper for the common case. Prefers the last result
+        flagged final; falls back to the last non-empty result so a turn is
+        never lost if the flush yields only interims.
+        """
+        results = self.finish_stream()
+        finals = [text for is_final, text in results if is_final and text.strip()]
+        if finals:
+            return finals[-1].strip()
+        any_text = [text for _, text in results if text.strip()]
+        return any_text[-1].strip() if any_text else ""
 
     def close_stream(self):
         if self._stream:
