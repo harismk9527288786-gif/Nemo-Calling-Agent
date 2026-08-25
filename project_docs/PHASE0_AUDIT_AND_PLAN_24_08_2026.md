@@ -154,6 +154,18 @@ Step two fixed the `finish_stream` generator bug in `nemo_asr.py` (it is now a p
 
 The benchmark's real-time pacing sleeps to each chunk's **end** (a capture device only releases a fully-recorded chunk), and RTF now sums push and drain CPU while also reporting decode-only RTF, since `push_audio` merely buffers and `poll_results` does the compute. The "Before" column below must be filled on the target machine — the DLL, the model and the Gemini key only exist there; nothing in this sandbox can produce a real number.
 
+### Progress: step 3 done (2026-08-25)
+
+ASR decode now runs on its own thread. `asr_worker.py` adds `AsrWorker`, which owns the stream handle and executes every call that touches it — `start_stream`, `push_audio`, `poll_results`, the flush — on a single thread named `asr-decode`. The asyncio loop keeps only non-blocking `submit_audio()` and `drain_results()` calls plus one awaitable `flush_and_restart()` per turn, so websocket reads and decode finally overlap instead of taking turns.
+
+Two design points that are easy to get wrong and are load-bearing here. First, **audio and control messages share one queue**. The obvious two-queue design would let a flush overtake audio still waiting to be decoded, truncating the tail of the utterance — precisely the bug step two just removed. The overflow policy is written to never discard a `_Flush` or `_Stop` for the same reason: a dropped flush hangs the turn on a future that is never resolved. Second, `_handle_flush` resolves the caller's future *before* reopening the stream, so the LLM request starts while the restart happens, and it restarts **unconditionally**, so a failed flush costs one turn's punctuation rather than ending the call. This preserves the ordering guarantee established in step two.
+
+Backpressure is bounded in **seconds of queued audio** (default 4.0), not in chunk count. Chunk size is set by the capture blocksize (`CHUNK_DURATION`), so a count-based bound silently changes meaning if that constant moves — 50 chunks is 4 s at 80 ms but 1 s at 20 ms. On overflow the *oldest* audio is dropped, because on a live call being current beats being complete, and every drop is counted and surfaced in the exit summary rather than hidden. The summary also warns when peak backlog exceeded half the bound, since that is the early signal that decode is losing the race at ~1.03× real time.
+
+`test_asr_worker.py` covers this against a stub recognizer, so it runs without the DLL: ordering (a flush queued behind ten chunks still sees all 12 800 samples), that the event loop keeps ticking through ~500 ms of decode, the drop policy and its accounting, that the bound means the same thing at 80 ms and 20 ms chunks, flush failure, flush timeout, stale-interim clearing after restart, and idempotent shutdown. 22/22 checks pass.
+
+What step 3 does **not** fix: the silence-window inflation. Partials still bump `last_speech_time`, and they now arrive from the worker with a small lag, so the turn still fires later than the 300 ms window implies. Decoupling the turn timer from partials is step 5's job; the metrics already separate energy-only `last_voice` from the partial-driven timer so the gap is measurable.
+
 
 ---
 

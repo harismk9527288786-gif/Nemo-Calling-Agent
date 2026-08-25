@@ -16,6 +16,7 @@ from google import genai
 from google.genai import types
 
 from nemo_asr import NeMoStreamingASR
+from asr_worker import AsrWorker
 from pipeline_metrics import MetricsLogger
 
 # Configuration
@@ -153,6 +154,11 @@ class CallingAgent:
         self.asr = NeMoStreamingASR(model_path=MODEL_PATH, gpu=-1)
         print("[Agent] ASR Model loaded successfully!")
 
+        # Decode runs on a dedicated thread (step 3). Constructed in run(),
+        # where there is a running event loop for it to resolve futures against.
+        self.asr_worker = None
+        self._worker_summary_printed = False
+
         # 4. Initialize Gemini Client
         self.client = genai.Client(api_key=self.api_key)
         
@@ -194,6 +200,51 @@ class CallingAgent:
             else:
                 samples = indata.copy().flatten().astype(np.float32)
             self.audio_q.put(samples)
+
+    def _asr_worker_summary(self) -> str:
+        """Decode-thread health, printed on exit.
+
+        These are the 'audio queue depth, max' and 'dropped chunks' rows of the
+        benchmark table in the plan. A non-zero drop count means decode could
+        not keep up with capture -- the number to watch when judging whether
+        step 3 actually bought headroom.
+        """
+        if self.asr_worker is None:
+            return "[asr] worker never started."
+        if self._worker_summary_printed:
+            return ""   # both the normal exit path and the Ctrl+C handler call this
+        self._worker_summary_printed = True
+        s = self.asr_worker.stats()
+        lines = [
+            "",
+            "=== ASR decode thread ===",
+            f"chunks submitted {s['submitted_chunks']}, decoded {s['decoded_chunks']}, "
+            f"dropped {s['dropped_chunks']}",
+            f"peak backlog {s['max_backlog_seconds']}s of {s['max_backlog_bound_seconds']}s "
+            f"bound ({s['max_queue_depth']} chunks)",
+            f"decode thread busy {s['decode_seconds']}s",
+        ]
+        if s["dropped_chunks"]:
+            lines.append(
+                f"WARNING: {s['dropped_chunks']} audio chunk(s) dropped -- decode is "
+                "behind capture; transcripts will have gaps."
+            )
+        elif s["max_backlog_seconds"] >= 0.5 * s["max_backlog_bound_seconds"]:
+            # No drops yet, but the margin is thin enough to be worth saying.
+            lines.append(
+                "NOTE: peak backlog used over half the bound -- little headroom "
+                "before chunks start dropping."
+            )
+        if s["queued_items_at_exit"]:
+            lines.append(
+                f"NOTE: {s['queued_items_at_exit']} chunk(s) "
+                f"({s['queued_seconds_at_exit']}s) still queued at exit."
+            )
+        if s["dropped_results"]:
+            lines.append(f"NOTE: {s['dropped_results']} stale interim result(s) discarded.")
+        if s["error_count"]:
+            lines.append(f"errors {s['error_count']}, last: {s['last_error']}")
+        return "\n".join(lines)
 
     async def play_audio_file(self, file_path: str):
         """Plays an audio file via pygame mixer."""
@@ -322,7 +373,16 @@ class CallingAgent:
             )
             self.metrics.finish_turn(greeting_turn)
 
-            self.asr.start_stream(interim_results=True, language_code="hi")
+            # ASR decode moves off the event loop here. The worker opens the
+            # stream on its own thread, so every ctypes stream call -- start,
+            # push, poll, finish -- happens on that one thread.
+            self.asr_worker = AsrWorker(
+                self.asr,
+                sample_rate=SAMPLE_RATE,
+                language_code="hi",
+                interim_results=True,
+            )
+            self.asr_worker.start()
             last_speech_time = None
             last_interaction_time = time.time()
             inactivity_count = 0
@@ -358,9 +418,12 @@ class CallingAgent:
                             turn.mark("speech_started")
                             turn.mark("last_voice", overwrite=True)
 
-                        self.asr.push_audio(audio_chunk, sample_rate=SAMPLE_RATE)
+                        # Hand the audio to the decode thread and pick up
+                        # whatever it has finished. Neither call blocks, so the
+                        # event loop stays free to service the websocket.
+                        self.asr_worker.submit_audio(audio_chunk)
 
-                        for is_final, transcript in self.asr.poll_results():
+                        for is_final, transcript in self.asr_worker.drain_results():
                             if transcript:
                                 current_transcript = transcript
                                 if transcript != last_printed:
@@ -383,17 +446,15 @@ class CallingAgent:
                                 turn.mark("turn_fired")
                             interim_text = current_transcript.strip()
 
-                            # Flush the ASR tail. This now actually executes --
-                            # finish_stream() used to be a generator that was
-                            # never iterated, so the C-level flush never ran and
-                            # we lost punctuation, ITN and the audio tail on
-                            # every single turn. Prefer the flushed final; fall
-                            # back to the interim if the flush yields nothing.
-                            final_text = ""
-                            try:
-                                final_text = self.asr.final_transcript()
-                            except Exception as exc:
-                                print(f"\n[ASR flush failed, using interim]: {exc}")
+                            # Flush the ASR tail and restart the stream. Both
+                            # happen on the decode thread; this awaits the
+                            # transcript instead of blocking the event loop.
+                            # The flush is ordered behind any audio still
+                            # queued, so the tail of the utterance is included.
+                            # On timeout or error we get "" and fall back to
+                            # the interim -- the worker restarts the stream
+                            # either way, so one bad flush cannot end the call.
+                            final_text = await self.asr_worker.flush_and_restart()
 
                             user_text = final_text or interim_text
                             print(f"\r[Transcribing]: {user_text} (Final)")
@@ -404,8 +465,10 @@ class CallingAgent:
                                 turn.final_transcript = final_text
                                 turn.used_final = bool(final_text)
 
-                            self.asr.start_stream(interim_results=True, language_code="hi")
-
+                            # No start_stream() here: flush_and_restart already
+                            # reopened it on the decode thread. Calling it from
+                            # this thread would open a second stream and orphan
+                            # the worker's.
                             current_transcript = ""
                             last_printed = ""
                             has_spoken = False
@@ -446,6 +509,13 @@ class CallingAgent:
 
         out_stream.stop()
         out_stream.close()
+        # Stop the decode thread BEFORE destroying the recognizer, or the
+        # worker can touch a freed handle on its way out.
+        if self.asr_worker is not None:
+            self.asr_worker.stop()
+            summary = self._asr_worker_summary()
+            if summary:
+                print(summary)
         self.asr.close()
         await self.http_client.aclose()
         self.metrics.close()
@@ -474,4 +544,9 @@ if __name__ == "__main__":
     finally:
         # Ctrl+C skips run()'s cleanup, and Ctrl+C is how most test calls end,
         # so print the latency summary here too. close() is idempotent.
+        if agent.asr_worker is not None:
+            agent.asr_worker.stop()
+            summary = agent._asr_worker_summary()
+            if summary:
+                print(summary)
         agent.metrics.close()
