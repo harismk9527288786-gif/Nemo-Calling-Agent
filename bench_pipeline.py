@@ -134,6 +134,7 @@ def bench_asr(
 
         decode_time = 0.0
         push_time = 0.0
+        pacing_late_ms = 0.0   # worst-case overshoot of the real-time schedule
         first_partial_ms = None
         partial_count = 0
         last_text = ""
@@ -153,6 +154,14 @@ def bench_asr(
                 sleep_for = target - time.perf_counter()
                 if sleep_for > 0:
                     time.sleep(sleep_for)
+                # Track how late we actually woke up. Windows time.sleep() can
+                # have ~15ms granularity on older Pythons, and a saturated CPU
+                # delays wakeup too. If this is large, the latency figures carry
+                # that much noise -- better to report it than to silently
+                # attribute scheduler jitter to the ASR.
+                late = (time.perf_counter() - target) * 1000.0
+                if late > pacing_late_ms:
+                    pacing_late_ms = late
 
             # Time push AND drain. push_audio only buffers, but in the live
             # agent both run on the asyncio thread, so both count against the
@@ -191,6 +200,7 @@ def bench_asr(
         "push_cpu_s": round(push_time, 3),
         "rtf": round(rtf, 3),
         "rtf_decode_only": round(decode_time / duration_s, 3) if duration_s > 0 else None,
+        "pacing_worst_late_ms": round(pacing_late_ms, 1),
         "partials": partial_count,
         "interim_text": last_text,
         "final_text": final_text,
@@ -200,11 +210,43 @@ def bench_asr(
 
 # ------------------------------------------------------------- Gemini stage
 
-def bench_gemini(runs: int = 3, voice: str = "Puck", model: str = "gemini-2.5-flash-native-audio-latest"):
+def load_production_system_instruction(kb_path: str):
+    """Reuse agent.py's own system-instruction builder.
+
+    This matters more than it looks: the system instruction is what the model
+    prefills before it can emit a single audio token, and agent.py sends the
+    full knowledge-base prompt. Benchmarking with a short stand-in would
+    report a time-to-first-audio the production path never achieves.
+
+    Importing agent pulls in the ASR DLL, pygame and sounddevice. That is fine
+    on the target machine and it guarantees we measure the real prompt; if the
+    import fails we say so loudly rather than quietly measuring the wrong thing.
+    """
+    try:
+        from agent import load_system_instruction
+        return load_system_instruction(kb_path), True
+    except Exception as exc:
+        print(f"  WARNING: could not import agent.load_system_instruction ({type(exc).__name__}: {exc}).")
+        print("  Falling back to a short stand-in prompt -- ttfa will be OPTIMISTIC")
+        print("  versus production, because the real system instruction is much longer.")
+        return (
+            "You are an energetic Indian phone calling sales assistant. "
+            "Speak in natural conversational Hinglish. Keep responses to 1-2 short sentences."
+        ), False
+
+
+def bench_gemini(
+    runs: int = 3,
+    voice: str = "Puck",
+    model: str = "gemini-2.5-flash-native-audio-latest",
+    kb_path: str = "knowledge_base.json",
+):
     """Time request-sent to first-audio-byte for Gemini Live, ``runs`` times.
 
     Uses one persistent session, matching how agent.py works -- per-request
     connections would measure handshake cost that the agent does not pay.
+    Model, voice, config shape and receive loop all mirror
+    ``generate_gemini_native_live_audio`` so the number is comparable.
     """
     import asyncio
     from google import genai
@@ -222,16 +264,20 @@ def bench_gemini(runs: int = 3, voice: str = "Puck", model: str = "gemini-2.5-fl
         "loanwords: tell the caller the showroom is open till 9:30 PM."
     )
 
+    system_instruction, is_production_prompt = load_production_system_instruction(kb_path)
+    print(f"  system instruction: {len(system_instruction)} chars"
+          + ("" if is_production_prompt else "  (STAND-IN, not production)"))
+
     async def _run():
         client = genai.Client(api_key=api_key)
         config = types.LiveConnectConfig(
-            response_modalities=["AUDIO"],
+            response_modalities=['AUDIO'],
             speech_config=types.SpeechConfig(
                 voice_config=types.VoiceConfig(
                     prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name=voice)
                 )
             ),
-            system_instruction="You are a fast phone sales assistant. One or two short sentences maximum.",
+            system_instruction=system_instruction,
         )
 
         results = []
@@ -273,6 +319,8 @@ def bench_gemini(runs: int = 3, voice: str = "Puck", model: str = "gemini-2.5-fl
     return {
         "connect_ms": round(connect_ms, 1),
         "runs": len(results),
+        "production_prompt": is_production_prompt,
+        "system_instruction_chars": len(system_instruction),
         "ttfa_median_ms": round(statistics.median(ttfas), 1) if ttfas else None,
         "ttfa_min_ms": round(min(ttfas), 1) if ttfas else None,
         "ttfa_max_ms": round(max(ttfas), 1) if ttfas else None,
@@ -302,6 +350,10 @@ def main():
                              "Off by default because production feeds 16kHz.")
     parser.add_argument("--runs", type=int, default=3, help="Gemini Live samples")
     parser.add_argument("--voice", default="Puck")
+    parser.add_argument("--kb", default="knowledge_base.json",
+                        help="Knowledge base used to build the system instruction, "
+                             "matching agent.py's --kb. Prompt length drives prefill, "
+                             "so use the same one you run calls with.")
     parser.add_argument("--label", default="", help="Tag for this run, e.g. 'before step 3'")
     args = parser.parse_args()
 
@@ -333,6 +385,15 @@ def main():
                   f"  (decode only {asr_result['rtf_decode_only']})"
                   + ("  <-- at or above 1.0: no headroom" if asr_result["rtf"] >= 0.95 else ""))
             print(f"  partials:        {asr_result['partials']}")
+            worst_late = asr_result.get("pacing_worst_late_ms")
+            if worst_late is not None:
+                note = ""
+                if worst_late > args.chunk_ms:
+                    note = ("  <-- exceeds one chunk: the feeder could not keep the "
+                            "schedule, latency figures are noisy")
+                elif worst_late > 20:
+                    note = "  <-- sleep granularity / CPU contention; treat +/-this as noise"
+                print(f"  pacing worst late: {worst_late}ms{note}")
             print(f"  interim text:    {_clip(asr_result['interim_text'])}")
             print(f"  final text:      {_clip(asr_result['final_text'])}")
             if asr_result["final_differs"]:
@@ -345,7 +406,7 @@ def main():
     if args.stage in ("gemini", "all"):
         print("\n--- Gemini Live stage ---")
         try:
-            gemini_result = bench_gemini(runs=args.runs, voice=args.voice)
+            gemini_result = bench_gemini(runs=args.runs, voice=args.voice, kb_path=args.kb)
             print(f"  ttfa median:     {gemini_result['ttfa_median_ms']}ms "
                   f"(min {gemini_result['ttfa_min_ms']}, max {gemini_result['ttfa_max_ms']})")
         except SystemExit as exc:
