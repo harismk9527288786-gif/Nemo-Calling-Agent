@@ -188,14 +188,16 @@ The row that matters most is the first, and it currently has no value in either 
 
 ### How to record it
 
-Two commands, both on the target machine. The first needs no network and no API key:
+Full procedure, with the git steps and the failure modes to check for, is in **`BASELINE_CAPTURE_RUNBOOK.md`**. The short version, and one correction to an earlier instruction in this document:
 
 ```
-python bench_pipeline.py --stage asr --wav test.wav --label "before step 3"
+python bench_pipeline.py --stage asr --wav test.wav
 python bench_pipeline.py --stage gemini --runs 5
 ```
 
-That fills the ASR and Gemini rows and prints a pasteable markdown block. The end-to-end row cannot come from the benchmark — it only exists during a real call, so place one call, talk for a few turns, then press Ctrl+C. `agent.py` prints a p50/p95 table per stage on exit and leaves the per-turn records in `client_logs/latency_<timestamp>_<call_id>.jsonl`. Set `NEMO_AGENT_METRICS=0` to turn all of it off.
+Those two fill the ASR and Gemini rows. **They are a one-time component budget, not a before/after.** `bench_asr` drives `nemo_asr` directly and never touches `AsrWorker`, and the Gemini stage opens its own Live session, so neither is affected by step 3 — labelling such a run "before step 3" would report a number identical to the "after" and imply a comparison the benchmark cannot make.
+
+The end-to-end row only exists during a real call, so place one call, talk for a few turns, then press Ctrl+C. `agent.py` prints a p50/p95 table per stage on exit and leaves the per-turn records in `client_logs/latency_<timestamp>_<call_id>.jsonl`. Set `NEMO_AGENT_METRICS=0` to turn all of it off. To compare two calls — for instance one on `d01f2e5` against one on current `main`, which is the only way to see step 3's effect — use `compare_runs.py --list` then `compare_runs.py <before>.jsonl <after>.jsonl`. It reads only latency fields, never transcripts, and warns when the sample is too small to support a conclusion. Because `client_logs/` is untracked and gitignored, both runs' records survive the checkout between them.
 
 Two things to check on that first instrumented call, because they are the audit's predictions and this is the run that confirms or refutes them. First, whether "Flushed ASR final used on N/N turns" reports every turn — if it does, the flush fix is live and the agent is finally acting on postprocessed text. Second, how far the median end-of-turn delay overshoots the configured 300 ms silence window; the summary prints that subtraction explicitly, and a large overshoot is the partial-driven timer bumping that step five removes.
 
