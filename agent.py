@@ -17,7 +17,15 @@ from google.genai import types
 
 from nemo_asr import NeMoStreamingASR
 from asr_worker import AsrWorker
+from playback_worker import PlaybackWorker
 from pipeline_metrics import MetricsLogger
+from vad_endpointer import SileroVADEndpointer, VADEvent
+
+if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
 
 # Configuration
 MODEL_PATH = r"models\nemotron-3.5-asr-streaming-0.6b.q8_0.gguf"
@@ -28,6 +36,15 @@ CHUNK_DURATION = 0.08  # 80ms chunk size for 2x faster audio processing
 CHUNK_SAMPLES = int(SAMPLE_RATE * CHUNK_DURATION)
 SILENCE_TIMEOUT = 0.30  # 300ms turn completion for snappy response
 ENERGY_THRESHOLD = 0.015
+BARGE_IN_THRESHOLD = 0.025  # Elevated threshold during agent speech to protect against acoustic echo
+BARGE_IN_CONSECUTIVE_FRAMES = 2  # Require 2 consecutive frames (160ms) above threshold to trigger barge-in
+
+# NOTE on Acoustic Echo:
+# Without hardware or OS acoustic echo cancellation (AEC), the microphone will pick up
+# audio from open speakers during agent playback. BARGE_IN_THRESHOLD and multi-frame
+# confirmation prevent low-to-medium echo from falsely triggering barge-in.
+# For local testing without headphones, keep speaker volume moderate. Headphone usage
+# is recommended until full AEC / Silero VAD (Step 5) is connected.
 
 DEFAULT_MODE = "gemini-live"  # "gemini-live" (Native Multimodal Audio) or "sarvam"
 DEFAULT_GEMINI_VOICE = "Puck"  # Puck, Aoede, Kore, Fenrir, Charon
@@ -111,6 +128,10 @@ class CallingAgent:
         self.audio_q = queue.Queue()
         self.is_running = False
         self.is_speaking = False
+        self.barge_in_active = False
+        self._turn_interrupted = False
+        self.playback: Optional[PlaybackWorker] = None
+        self._agent_task: Optional[asyncio.Task] = None
         self.client = None
         self.chat = None
         self.http_client = httpx.AsyncClient(timeout=10.0)
@@ -175,6 +196,20 @@ class CallingAgent:
             silence_window_ms=SILENCE_TIMEOUT * 1000.0,
         )
 
+        # 5. Silero VAD Endpointer with energy fallback (Step 5)
+        self.vad = SileroVADEndpointer(
+            sample_rate=SAMPLE_RATE,
+            speech_threshold=0.50,
+            barge_in_speech_threshold=0.65,
+            silence_threshold=0.35,
+            min_speech_duration_ms=96.0,
+            barge_in_min_speech_duration_ms=160.0,
+            min_silence_duration_ms=SILENCE_TIMEOUT * 1000.0,
+            speech_pad_ms=64.0,
+            energy_fallback_threshold=ENERGY_THRESHOLD,
+            energy_fallback_barge_in_threshold=BARGE_IN_THRESHOLD,
+        )
+
     def _init_gemini_text_chat(self):
         """Initializes standard Gemini text chat for Sarvam TTS mode."""
         candidate_models = ["gemini-3.7-flash", "gemini-2.5-flash", "gemini-flash-latest"]
@@ -193,13 +228,12 @@ class CallingAgent:
                 pass
 
     def _audio_callback(self, indata, frames, time_info, status):
-        """SoundDevice capture callback (runs in audio thread)."""
-        if not self.is_speaking:
-            if indata.ndim > 1 and indata.shape[1] > 1:
-                samples = np.mean(indata, axis=1, dtype=np.float32)
-            else:
-                samples = indata.copy().flatten().astype(np.float32)
-            self.audio_q.put(samples)
+        """SoundDevice capture callback (runs in audio thread). Unconditional capture."""
+        if indata.ndim > 1 and indata.shape[1] > 1:
+            samples = np.mean(indata, axis=1, dtype=np.float32)
+        else:
+            samples = indata.copy().flatten().astype(np.float32)
+        self.audio_q.put(samples)
 
     def _asr_worker_summary(self) -> str:
         """Decode-thread health, printed on exit.
@@ -263,59 +297,104 @@ class CallingAgent:
                 except Exception:
                     pass
 
-    async def generate_gemini_native_live_audio(self, live_session, out_stream, user_transcript: str, turn=None):
-        """Streams real-time native speech chunks directly to speakers with zero disk buffering.
+    async def _drain_trailing_live_frames(self, live_session, timeout: float = 0.2):
+        """Drains any trailing server packets after barge-in/activity_end to ensure Turn N+1 receives a clean WebSocket."""
+        recv_iter = live_session.receive().__aiter__()
+        while True:
+            try:
+                await asyncio.wait_for(recv_iter.__anext__(), timeout=timeout)
+            except (asyncio.TimeoutError, TimeoutError, StopAsyncIteration):
+                break
+            except Exception:
+                break
+
+    async def generate_gemini_native_live_audio(self, live_session, user_transcript: str, turn=None):
+        """Streams real-time native speech chunks to PlaybackWorker with non-blocking queueing.
 
         ``turn`` is an optional TurnMetrics record; when supplied, the request
-        and first-audio marks are recorded on it. Instrumentation only -- it
-        does not affect what is sent or played.
+        and first-audio marks are recorded on it.
         """
         print(f"\n[User]: {user_transcript}")
         print(f"[Agent ({self.gemini_voice})]: ", end="", flush=True)
         self.is_speaking = True
+        self._turn_interrupted = False
 
+        interrupted = False
         try:
-            await live_session.send(input=user_transcript, end_of_turn=True)
+            await live_session.send_client_content(
+                turns=types.Content(role="user", parts=[types.Part(text=user_transcript)]),
+                turn_complete=True,
+            )
             if turn is not None:
                 turn.mark("llm_sent")
 
-            async for response in live_session.receive():
-                if not self.is_running:
+            recv_iter = live_session.receive().__aiter__()
+            while self.is_running:
+                if self._turn_interrupted and not interrupted:
+                    interrupted = True
+
+                try:
+                    if interrupted:
+                        # Once interrupted, wait at most 500ms to drain remaining turn frames (turn_complete)
+                        response = await asyncio.wait_for(recv_iter.__anext__(), timeout=0.5)
+                    else:
+                        response = await recv_iter.__anext__()
+                except StopAsyncIteration:
                     break
+                except (asyncio.TimeoutError, TimeoutError):
+                    print("\n[Agent]: Turn drain timeout (500ms) reached after interruption.")
+                    break
+
                 server_content = response.server_content
                 if server_content is not None:
+                    if server_content.interrupted:
+                        print("\n[Agent]: Gemini server acknowledged interruption.")
+                        if self.playback is not None:
+                            self.playback.interrupt()
+                        interrupted = True
+                        continue
+
                     model_turn = server_content.model_turn
-                    if model_turn is not None:
+                    if model_turn is not None and not interrupted:
                         for part in model_turn.parts:
                             if part.inline_data and part.inline_data.data:
-                                # first_audio is marked before the write so it
-                                # measures arrival, not device backpressure.
                                 if turn is not None:
                                     turn.mark("first_audio")
                                     turn.audio_bytes += len(part.inline_data.data)
-                                # Play raw 24kHz PCM chunk immediately through sounddevice
-                                out_stream.write(part.inline_data.data)
+                                # Non-blocking enqueue to background playback worker
+                                if self.playback is not None:
+                                    self.playback.enqueue(part.inline_data.data)
                                 if turn is not None:
-                                    # First write only; blocking cost of later
-                                    # writes is agent speech time, not latency.
                                     turn.mark("playback_started")
+
                     if server_content.turn_complete:
-                        if turn is not None:
+                        if turn is not None and not interrupted:
                             turn.mark("turn_complete")
                         break
 
+        except asyncio.CancelledError:
+            if self.playback is not None:
+                self.playback.interrupt()
+            raise
         except Exception as e:
             print(f"\n[Gemini Live Audio Error]: {e}")
             if turn is not None:
                 turn.error = f"{type(e).__name__}: {e}"
         finally:
             self.is_speaking = False
-            # Clear any audio queued while the agent was speaking
-            while not self.audio_q.empty():
-                try:
-                    self.audio_q.get_nowait()
-                except queue.Empty:
-                    break
+
+    async def _run_agent_turn(self, live_session, user_transcript: str, turn=None):
+        """Wrapper to run speech generation as an asyncio task and record metrics cleanly."""
+        try:
+            await self.generate_gemini_native_live_audio(live_session, user_transcript, turn=turn)
+        except asyncio.CancelledError:
+            pass
+        except Exception as exc:
+            print(f"\n[Agent Turn Error]: {exc}")
+        finally:
+            self.is_speaking = False
+            if turn is not None:
+                self.metrics.finish_turn(turn)
 
     async def run(self, device: int = None):
         """Main real-time streaming calling loop with persistent Live session."""
@@ -338,12 +417,12 @@ class CallingAgent:
             channels=1,
             dtype='int16'
         )
-        out_stream.start()
+        self.playback = PlaybackWorker(out_stream=out_stream)
 
         print("\n" + "="*60)
         print("  NeMo-Speech + Gemini Live Multimodal AI Calling Agent")
         print(f"  Mode: {self.mode.upper()} | Voice: {self.gemini_voice}")
-        print(f"  Audio Output: Direct Low-Latency 24kHz PCM Stream")
+        print(f"  Audio Output: Direct Low-Latency 24kHz PCM Stream (Decoupled)")
         print(f"  Turn Timeout: {SILENCE_TIMEOUT}s | Press Ctrl+C to exit")
         print("="*60 + "\n")
 
@@ -356,170 +435,253 @@ class CallingAgent:
                     )
                 )
             ),
-            system_instruction=self.system_instruction
+            system_instruction=self.system_instruction,
+            realtime_input_config=types.RealtimeInputConfig(
+                automatic_activity_detection=types.AutomaticActivityDetection(disabled=True)
+            )
         )
 
-        print(f"[Agent] Connecting to Gemini Live Session ({self.biz_name})...")
-        async with self.client.aio.live.connect(model="gemini-2.5-flash-native-audio-latest", config=config) as live_session:
-            print("[Agent] Connected! Starting voice session...")
-
-            # Initial snappy greeting
-            greeting_turn = self.metrics.start_turn(kind="greeting")
-            await self.generate_gemini_native_live_audio(
-                live_session,
-                out_stream,
-                f"Give an enthusiastic, 1-sentence opening greeting welcoming the caller to {self.biz_name} and asking what they are looking for today.",
-                turn=greeting_turn,
-            )
-            self.metrics.finish_turn(greeting_turn)
-
-            # ASR decode moves off the event loop here. The worker opens the
-            # stream on its own thread, so every ctypes stream call -- start,
-            # push, poll, finish -- happens on that one thread.
-            self.asr_worker = AsrWorker(
-                self.asr,
-                sample_rate=SAMPLE_RATE,
-                language_code="hi",
-                interim_results=True,
-            )
-            self.asr_worker.start()
-            last_speech_time = None
-            last_interaction_time = time.time()
-            inactivity_count = 0
-            INACTIVITY_TIMEOUT = 4.5  # 4.5s snappy silence nudge trigger
-            has_spoken = False
-            current_transcript = ""
-            last_printed = ""
-            turn = None  # TurnMetrics for the caller turn in progress
-
+        try:
             with in_stream:
-                print("\n[Agent] Listening for your voice...")
-                while self.is_running:
-                    chunk_batch = []
-                    while not self.audio_q.empty():
-                        try:
-                            chunk_batch.append(self.audio_q.get_nowait())
-                        except queue.Empty:
-                            break
+                print(f"[Agent] Connecting to Gemini Live Session ({self.biz_name})...")
+                async with self.client.aio.live.connect(model="gemini-2.5-flash-native-audio-latest", config=config) as live_session:
+                    print("[Agent] Connected! Starting voice session...")
 
-                    if chunk_batch and not self.is_speaking:
-                        audio_chunk = np.concatenate(chunk_batch)
-                        rms = np.sqrt(np.mean(audio_chunk**2))
+                    # Initial snappy greeting as a background task so audio capture runs immediately
+                    greeting_turn = self.metrics.start_turn(kind="greeting")
+                    self._agent_task = asyncio.create_task(
+                        self._run_agent_turn(
+                            live_session,
+                            f"Give an enthusiastic, 1-sentence opening greeting welcoming the caller to {self.biz_name} and asking what they are looking for today.",
+                            turn=greeting_turn,
+                        )
+                    )
 
-                        if rms > ENERGY_THRESHOLD:
-                            last_speech_time = time.time()
-                            last_interaction_time = time.time()
-                            has_spoken = True
-                            # Energy-only voice marks. Kept separate from the
-                            # partial-driven bumping below so the summary can
-                            # show how much ASR lag inflates the silence window.
-                            if turn is None:
-                                turn = self.metrics.start_turn(kind="caller")
-                            turn.mark("speech_started")
-                            turn.mark("last_voice", overwrite=True)
+                    # ASR decode runs on its dedicated thread
+                    self.asr_worker = AsrWorker(
+                        self.asr,
+                        sample_rate=SAMPLE_RATE,
+                        language_code="hi",
+                        interim_results=True,
+                    )
+                    self.asr_worker.start()
+                    last_speech_time = None
+                    last_interaction_time = time.time()
+                    inactivity_count = 0
+                    INACTIVITY_TIMEOUT = 4.5  # 4.5s snappy silence nudge trigger
+                    has_spoken = False
+                    current_transcript = ""
+                    last_printed = ""
+                    turn = None  # TurnMetrics for the caller turn in progress
 
-                        # Hand the audio to the decode thread and pick up
-                        # whatever it has finished. Neither call blocks, so the
-                        # event loop stays free to service the websocket.
-                        self.asr_worker.submit_audio(audio_chunk)
+                    print("\n[Agent] Listening for your voice...")
+                    while self.is_running:
+                        agent_active = (
+                            self.is_speaking
+                            or (self.playback is not None and self.playback.is_playing())
+                            or (self._agent_task is not None and not self._agent_task.done())
+                        )
 
-                        for is_final, transcript in self.asr_worker.drain_results():
-                            if transcript:
-                                current_transcript = transcript
-                                if transcript != last_printed:
-                                    print(f"\r[Transcribing]: {transcript}", end="", flush=True)
-                                    last_printed = transcript
+                        chunk_batch = []
+                        while not self.audio_q.empty():
+                            try:
+                                chunk_batch.append(self.audio_q.get_nowait())
+                            except queue.Empty:
+                                break
+
+                        endpoint_detected = False
+                        if chunk_batch:
+                            audio_pieces_to_submit = []
+
+                            for chunk in chunk_batch:
+                                vad_event = self.vad.process_chunk(chunk, agent_active=agent_active)
+
+                                if vad_event.barge_in:
+                                    print("\n[Agent] Caller barge-in detected! Halting playback...")
+                                    if self.playback is not None:
+                                        self.playback.interrupt()
+                                    self._turn_interrupted = True
+
+                                    # Signal Gemini to complete current turn without cancelling receive loop
+                                    try:
+                                        await live_session.send_realtime_input(activity_start=types.ActivityStart())
+                                        self.barge_in_active = True
+                                    except Exception as exc:
+                                        print(f"[Agent] Failed to send activity_start: {exc}")
+
+                                    self.is_speaking = False
+                                    agent_active = False
+
                                     last_speech_time = time.time()
                                     last_interaction_time = time.time()
                                     has_spoken = True
                                     if turn is None:
                                         turn = self.metrics.start_turn(kind="caller")
-                                    turn.mark("first_partial")
-                                    turn.partial_count += 1
+                                    turn.mark("speech_started")
+                                    turn.mark("last_voice", overwrite=True)
 
-                    now = time.time()
+                                elif vad_event.speech_start:
+                                    last_speech_time = time.time()
+                                    last_interaction_time = time.time()
+                                    has_spoken = True
+                                    if turn is None:
+                                        turn = self.metrics.start_turn(kind="caller")
+                                    turn.mark("speech_started")
+                                    turn.mark("last_voice", overwrite=True)
 
-                    # 1. Caller finished speaking -> Generate response
-                    if has_spoken and last_speech_time and (now - last_speech_time > SILENCE_TIMEOUT):
-                        if current_transcript.strip():
-                            if turn is not None:
-                                turn.mark("turn_fired")
+                                elif vad_event.is_speech:
+                                    last_speech_time = time.time()
+                                    last_interaction_time = time.time()
+                                    has_spoken = True
+                                    if turn is not None:
+                                        turn.mark("last_voice", overwrite=True)
+
+                                if vad_event.audio_for_asr is not None:
+                                    audio_pieces_to_submit.append(vad_event.audio_for_asr)
+
+                                if vad_event.endpoint_detected:
+                                    endpoint_detected = True
+
+                            # Submit sliced audio (with pre-speech onset padding) to ASR worker
+                            if audio_pieces_to_submit:
+                                audio_to_decode = np.concatenate(audio_pieces_to_submit)
+                                self.asr_worker.submit_audio(audio_to_decode)
+
+                            for is_final, transcript in self.asr_worker.drain_results():
+                                if transcript:
+                                    current_transcript = transcript
+                                    if transcript != last_printed:
+                                        print(f"\r[Transcribing]: {transcript}", end="", flush=True)
+                                        last_printed = transcript
+                                        last_interaction_time = time.time()
+                                        if turn is None:
+                                            turn = self.metrics.start_turn(kind="caller")
+                                        turn.mark("first_partial")
+                                        turn.partial_count += 1
+
+                        now = time.time()
+
+                        # 1. Caller finished speaking -> Generate response
+                        if has_spoken and (endpoint_detected or (last_speech_time and (now - last_speech_time > SILENCE_TIMEOUT))):
                             interim_text = current_transcript.strip()
-
-                            # Flush the ASR tail and restart the stream. Both
-                            # happen on the decode thread; this awaits the
-                            # transcript instead of blocking the event loop.
-                            # The flush is ordered behind any audio still
-                            # queued, so the tail of the utterance is included.
-                            # On timeout or error we get "" and fall back to
-                            # the interim -- the worker restarts the stream
-                            # either way, so one bad flush cannot end the call.
                             final_text = await self.asr_worker.flush_and_restart()
+                            user_text = (final_text or interim_text).strip()
 
-                            user_text = final_text or interim_text
-                            print(f"\r[Transcribing]: {user_text} (Final)")
+                            if user_text:
+                                if turn is not None:
+                                    turn.mark("turn_fired")
+                                    turn.mark("asr_final")
+                                    turn.interim_transcript = interim_text
+                                    turn.final_transcript = final_text
+                                    turn.used_final = bool(final_text)
 
-                            if turn is not None:
-                                turn.mark("asr_final")
-                                turn.interim_transcript = interim_text
-                                turn.final_transcript = final_text
-                                turn.used_final = bool(final_text)
+                                print(f"\r[Transcribing]: {user_text} (Final)")
 
-                            # No start_stream() here: flush_and_restart already
-                            # reopened it on the decode thread. Calling it from
-                            # this thread would open a second stream and orphan
-                            # the worker's.
-                            current_transcript = ""
-                            last_printed = ""
-                            has_spoken = False
-                            last_speech_time = None
-                            inactivity_count = 0
+                                current_transcript = ""
+                                last_printed = ""
+                                has_spoken = False
+                                last_speech_time = None
+                                inactivity_count = 0
+                                self.vad.reset()
 
-                            await self.generate_gemini_native_live_audio(live_session, out_stream, user_text, turn=turn)
-                            self.metrics.finish_turn(turn)
-                            turn = None
-                            last_interaction_time = time.time()
-                            print("\n[Agent] Listening for your voice...")
-                        else:
-                            has_spoken = False
-                            turn = None  # no speech content -- discard the record
+                                # If caller barged in, close the activity period before sending new turn
+                                if self.barge_in_active:
+                                    try:
+                                        await live_session.send_realtime_input(activity_end=types.ActivityEnd())
+                                        # Drain any trailing server frames from the interrupted turn before Turn N+1 begins
+                                        await self._drain_trailing_live_frames(live_session, timeout=0.2)
+                                    except Exception as exc:
+                                        print(f"[Agent] Failed to send activity_end: {exc}")
+                                    self.barge_in_active = False
 
-                    # 2. Caller has been completely silent -> Proactive silence nudge
-                    elif not has_spoken and not self.is_speaking and (now - last_interaction_time > INACTIVITY_TIMEOUT):
-                        if inactivity_count == 0:
-                            print("\n[Agent] Caller silent for 7s. Sending check-in nudge...")
-                            nudge_prompt = "The caller has been silent for a few seconds. Give a quick, natural, polite 1-sentence check in Hinglish asking if they can hear you (e.g. 'हेलो सर, क्या आपको मेरी आवाज़ आ रही है?')."
-                            nudge_turn = self.metrics.start_turn(kind="nudge")
-                            await self.generate_gemini_native_live_audio(live_session, out_stream, nudge_prompt, turn=nudge_turn)
-                            self.metrics.finish_turn(nudge_turn)
-                            inactivity_count += 1
-                            last_interaction_time = time.time()
-                            print("\n[Agent] Listening for your voice...")
-                        elif inactivity_count == 1:
-                            print("\n[Agent] Caller still silent. Offering WhatsApp catalog...")
-                            nudge_prompt = "The caller is still silent. Give a polite 1-sentence offer in Hinglish asking if you should send the catalog and shop location to their WhatsApp."
-                            nudge_turn = self.metrics.start_turn(kind="nudge")
-                            await self.generate_gemini_native_live_audio(live_session, out_stream, nudge_prompt, turn=nudge_turn)
-                            self.metrics.finish_turn(nudge_turn)
-                            inactivity_count += 1
-                            last_interaction_time = time.time()
-                            print("\n[Agent] Listening for your voice...")
+                                # Ensure previous agent turn task has finished draining before starting next turn
+                                if self._agent_task is not None and not self._agent_task.done():
+                                    try:
+                                        await asyncio.wait_for(asyncio.shield(self._agent_task), timeout=0.5)
+                                    except (asyncio.TimeoutError, TimeoutError, Exception):
+                                        self._agent_task.cancel()
+                                        try:
+                                            await self._agent_task
+                                        except (asyncio.CancelledError, Exception):
+                                            pass
 
-                    await asyncio.sleep(0.02)
+                                current_turn = turn
+                                turn = None
+                                self._agent_task = asyncio.create_task(
+                                    self._run_agent_turn(live_session, user_text, turn=current_turn)
+                                )
+                                last_interaction_time = time.time()
+                                print("\n[Agent] Listening for your voice...")
+                            else:
+                                has_spoken = False
+                                turn = None
+                                self.vad.reset()
 
-        out_stream.stop()
-        out_stream.close()
-        # Stop the decode thread BEFORE destroying the recognizer, or the
-        # worker can touch a freed handle on its way out.
-        if self.asr_worker is not None:
-            self.asr_worker.stop()
-            summary = self._asr_worker_summary()
-            if summary:
-                print(summary)
-        self.asr.close()
-        await self.http_client.aclose()
-        self.metrics.close()
-        print("\n[Agent] Stopped.")
+
+                        # 2. Caller has been completely silent -> Proactive silence nudge
+                        elif not has_spoken and not agent_active and (now - last_interaction_time > INACTIVITY_TIMEOUT):
+                            if inactivity_count == 0:
+                                print("\n[Agent] Caller silent for 4.5s. Sending check-in nudge...")
+                                nudge_prompt = "The caller has been silent for a few seconds. Give a quick, natural, polite 1-sentence check in Hinglish asking if they can hear you (e.g. 'हेलो सर, क्या आपको मेरी आवाज़ आ रही है?')."
+                                nudge_turn = self.metrics.start_turn(kind="nudge")
+                                if self._agent_task is not None and not self._agent_task.done():
+                                    try:
+                                        await asyncio.wait_for(asyncio.shield(self._agent_task), timeout=0.5)
+                                    except (asyncio.TimeoutError, TimeoutError, Exception):
+                                        self._agent_task.cancel()
+                                        try:
+                                            await self._agent_task
+                                        except (asyncio.CancelledError, Exception):
+                                            pass
+                                self._agent_task = asyncio.create_task(
+                                    self._run_agent_turn(live_session, nudge_prompt, turn=nudge_turn)
+                                )
+                                inactivity_count += 1
+                                last_interaction_time = time.time()
+                                print("\n[Agent] Listening for your voice...")
+                            elif inactivity_count == 1:
+                                print("\n[Agent] Caller still silent. Offering WhatsApp catalog...")
+                                nudge_prompt = "The caller is still silent. Give a polite 1-sentence offer in Hinglish asking if you should send the catalog and shop location to their WhatsApp."
+                                nudge_turn = self.metrics.start_turn(kind="nudge")
+                                if self._agent_task is not None and not self._agent_task.done():
+                                    try:
+                                        await asyncio.wait_for(asyncio.shield(self._agent_task), timeout=0.5)
+                                    except (asyncio.TimeoutError, TimeoutError, Exception):
+                                        self._agent_task.cancel()
+                                        try:
+                                            await self._agent_task
+                                        except (asyncio.CancelledError, Exception):
+                                            pass
+                                self._agent_task = asyncio.create_task(
+                                    self._run_agent_turn(live_session, nudge_prompt, turn=nudge_turn)
+                                )
+                                inactivity_count += 1
+                                last_interaction_time = time.time()
+                                print("\n[Agent] Listening for your voice...")
+
+                        await asyncio.sleep(0.02)
+        finally:
+            if self._agent_task is not None and not self._agent_task.done():
+                self._agent_task.cancel()
+                try:
+                    await self._agent_task
+                except (asyncio.CancelledError, Exception):
+                    pass
+
+            if self.playback is not None:
+                self.playback.stop()
+
+            if self.asr_worker is not None:
+                self.asr_worker.stop()
+                summary = self._asr_worker_summary()
+                if summary:
+                    print(summary)
+            if self.vad is not None:
+                self.vad.reset()
+            self.asr.close()
+            await self.http_client.aclose()
+            self.metrics.close()
+            print("\n[Agent] Stopped.")
 
 if __name__ == "__main__":
     import argparse
@@ -542,8 +704,8 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\n[Agent] Exited cleanly by user.")
     finally:
-        # Ctrl+C skips run()'s cleanup, and Ctrl+C is how most test calls end,
-        # so print the latency summary here too. close() is idempotent.
+        if agent.playback is not None:
+            agent.playback.stop()
         if agent.asr_worker is not None:
             agent.asr_worker.stop()
             summary = agent._asr_worker_summary()

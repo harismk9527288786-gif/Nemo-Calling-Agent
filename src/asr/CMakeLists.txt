@@ -111,12 +111,31 @@ if(WIN32)
     find_package(absl CONFIG QUIET)
     if(absl_FOUND)
         target_link_libraries(nemo_speech_asr PRIVATE
-            absl::flat_hash_map absl::flat_hash_set absl::strings absl::str_format absl::hash)
+            absl::flat_hash_map
+            absl::flat_hash_set
+            absl::strings
+            absl::str_format
+            absl::hash
+            absl::flags
+            absl::flags_commandlineflag
+            absl::flags_commandlineflag_internal
+            absl::flags_config
+            absl::flags_internal
+            absl::flags_marshalling
+            absl::flags_parse
+            absl::flags_private_handle_accessor
+            absl::flags_program_name
+            absl::flags_reflection
+            absl::flags_usage
+            absl::flags_usage_internal
+        )
     endif()
-    find_package(protobuf CONFIG QUIET)
-    if(TARGET protobuf::libprotobuf)
-        target_link_libraries(nemo_speech_asr PRIVATE protobuf::libprotobuf)
-    endif()
+
+    find_package(Protobuf CONFIG REQUIRED)
+
+    target_link_libraries(nemo_speech_asr PRIVATE
+        protobuf::libprotobuf
+    )
 endif()
 
 if(NEMO_SPEECH_WITH_FLASHLIGHT)

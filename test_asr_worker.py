@@ -128,8 +128,9 @@ async def test_decode_off_event_loop():
     w.stop()
 
     # If decode were inline, the loop would have been blocked ~500ms and
-    # managed only a handful of ticks.
-    check("event loop kept running during decode", ticks > 40, f"{ticks} ticks")
+    # managed only a handful of ticks (< 5). On Windows with 15.6ms timer resolution,
+    # 500ms yields ~30-36 ticks.
+    check("event loop kept running during decode", ticks >= 25, f"{ticks} ticks")
     check("decode ran on the worker thread", asr.threads == {"asr-decode"}, str(asr.threads))
 
 

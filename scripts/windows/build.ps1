@@ -128,7 +128,7 @@ Write-Host "    backend=$Backend grpc=$($Grpc.IsPresent) http=$($Http.IsPresent)
 # --- 1. Refresh environment from registry (choco/installers land there) ---------
 $machine = [Environment]::GetEnvironmentVariable('Path', 'Machine')
 $user    = [Environment]::GetEnvironmentVariable('Path', 'User')
-$env:Path = "$machine;$user"
+$env:Path = "C:\Program Files\CMake\bin;C:\Program Files;$machine;$user"
 $vk = [Environment]::GetEnvironmentVariable('VULKAN_SDK', 'Machine')
 if ($vk) { $env:VULKAN_SDK = $vk }
 

@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 // Live-microphone streaming ASR built on the stable C ABI (nemo_speech_asr_*).
 //
-// Opens the default (or --device N) capture device at 16 kHz mono float32 via
-// PortAudio, pushes samples into an nemo_speech_asr_stream, and prints interim
+// Opens the default (or --device N) capture device via PortAudio, resamples it
+// to the model's required 16 kHz mono float32, and prints interim
 // transcripts as they update plus a final transcript on Ctrl-C. The C ABI
 // routes by the model's head internally (RNNT cache-aware vs CTC buffered), so
 // this one binary handles both without referencing any internal C++ class.
@@ -33,7 +33,7 @@ namespace {
 // All current ASR models (Parakeet CTC, Nemotron-Speech RNNT) run at 16 kHz
 // mono. The C ABI validates this on push and errors otherwise, so a future
 // non-16k model fails loudly rather than silently mis-decoding.
-constexpr int kSampleRate = 16000;
+constexpr int kModelSampleRate = 16000;
 
 // Samples captured on PortAudio's audio thread, drained by the main loop.
 struct SampleQueue {
@@ -42,6 +42,7 @@ struct SampleQueue {
 };
 SampleQueue g_queue;
 std::atomic<bool> g_running{true};
+std::atomic<bool> g_capture_int16{false};
 
 // PortAudio capture callback (audio thread): append mono float32 input to the
 // shared queue. Keep it allocation-light and lock-brief; the main thread does
@@ -51,9 +52,16 @@ capture_cb(
     const void* input, void* /*output*/, unsigned long frame_count,
     const PaStreamCallbackTimeInfo* /*ti*/, PaStreamCallbackFlags /*flags*/, void* /*user*/) {
     if (input && frame_count) {
-        const float* in = static_cast<const float*>(input);
         std::lock_guard<std::mutex> lock(g_queue.mu);
-        g_queue.buf.insert(g_queue.buf.end(), in, in + frame_count);
+        if (g_capture_int16.load()) {
+            const int16_t* in = static_cast<const int16_t*>(input);
+            for (unsigned long i = 0; i < frame_count; ++i) {
+                g_queue.buf.push_back(static_cast<float>(in[i]) / 32768.0f);
+            }
+        } else {
+            const float* in = static_cast<const float*>(input);
+            g_queue.buf.insert(g_queue.buf.end(), in, in + frame_count);
+        }
     }
     return paContinue;
 }
@@ -72,10 +80,67 @@ print_input_devices() {
     for (int i = 0; i < n; i++) {
         const PaDeviceInfo* info = Pa_GetDeviceInfo(i);
         if (info && info->maxInputChannels > 0) {
-            std::fprintf(stderr, "  %d: %s\n", i, info->name);
+            std::fprintf(
+                stderr, "  %d: %s (default rate: %.0f Hz)\n", i, info->name,
+                info->defaultSampleRate);
         }
     }
 }
+
+void
+print_portaudio_error(const char* operation, PaError error) {
+    std::fprintf(
+        stderr, "[transcribe_live] %s failed: %s\n", operation, Pa_GetErrorText(error));
+    const PaHostErrorInfo* host_error = Pa_GetLastHostErrorInfo();
+    if (host_error && host_error->errorText && host_error->errorText[0]) {
+        std::fprintf(
+            stderr, "[transcribe_live] host error (%ld): %s\n", host_error->errorCode,
+            host_error->errorText);
+    }
+}
+
+// A small streaming linear resampler. PortAudio devices commonly expose 44.1
+// or 48 kHz, while the ASR C ABI deliberately accepts only 16 kHz samples.
+// Keeping the state between callback drains avoids clicks or dropped samples at
+// chunk boundaries.
+class LinearResampler {
+public:
+    explicit LinearResampler(double input_rate)
+        : step_(input_rate / kModelSampleRate) {}
+
+    void process(const std::vector<float>& input, std::vector<float>& output) {
+        if (input.empty()) {
+            return;
+        }
+
+        const uint64_t end = samples_seen_ + input.size();
+        while (static_cast<uint64_t>(next_position_) + 1 < end) {
+            const uint64_t left_index = static_cast<uint64_t>(next_position_);
+            const uint64_t right_index = left_index + 1;
+            const float left = sample_at(left_index, input);
+            const float right = sample_at(right_index, input);
+            const float fraction = static_cast<float>(next_position_ - left_index);
+            output.push_back(left + (right - left) * fraction);
+            next_position_ += step_;
+        }
+
+        samples_seen_ = end;
+        previous_sample_ = input.back();
+    }
+
+private:
+    float sample_at(uint64_t index, const std::vector<float>& input) const {
+        if (index + 1 == samples_seen_) {
+            return previous_sample_;
+        }
+        return input[static_cast<size_t>(index - samples_seen_)];
+    }
+
+    double step_;
+    double next_position_ = 0.0;
+    uint64_t samples_seen_ = 0;
+    float previous_sample_ = 0.0f;
+};
 
 // Format a final's words as speaker turns ("speaker N: ..."), riva-style
 // presentation of WordInfo.speaker_tag. Finals-only: interims carry no words.
@@ -127,19 +192,35 @@ main(int argc, char** argv) {
     if (argc < 2) {
         std::fprintf(
             stderr,
-            "Usage: %s <model.gguf> [--gpu N] [--right-ctx R] [--device N] [--diar D.gguf]\n"
+            "Usage: %s <model.gguf> [--gpu N] [--right-ctx R] [--device N] [--language CODE] [--diar D.gguf]\n"
+            "       %s --list-devices\n"
             "  --gpu N        GPU device index (default 0; -1 = CPU)\n"
             "  --right-ctx R  cache-aware right context (RNNT; default 1, ~160ms latency)\n"
             "  --device N     PortAudio capture device index (default: system default)\n"
+            "  --list-devices list PortAudio capture devices and exit\n"
             "  --diar D.gguf  Sortformer diarizer GGUF: finals print as speaker turns\n",
-            argv[0]);
+            argv[0], argv[0]);
         return 1;
     }
+
+    // Allow device discovery without supplying or loading a model.
+    if (std::strcmp(argv[1], "--list-devices") == 0) {
+        if (Pa_Initialize() != paNoError) {
+            std::fprintf(stderr, "[transcribe_live] Pa_Initialize failed\n");
+            return 3;
+        }
+        print_input_devices();
+        Pa_Terminate();
+        return 0;
+    }
+
     const char* model_path = argv[1];
     int gpu = 0;
     int right_ctx = 1;
-    int device_idx = -1;  // -1 = system default
+    int device_idx = -1;
     const char* diar_model = nullptr;
+    const char* language = nullptr;
+    bool list_devices = false;
     for (int i = 2; i < argc; i++) {
         std::string a = argv[i];
         if (a == "--gpu" && i + 1 < argc)
@@ -150,6 +231,20 @@ main(int argc, char** argv) {
             device_idx = std::atoi(argv[++i]);
         else if (a == "--diar" && i + 1 < argc)
             diar_model = argv[++i];
+        else if (a == "--language" && i + 1 < argc)
+            language = argv[++i];
+        else if (a == "--list-devices")
+            list_devices = true;
+    }
+
+    if (list_devices) {
+        if (Pa_Initialize() != paNoError) {
+            std::fprintf(stderr, "[transcribe_live] Pa_Initialize failed\n");
+            return 3;
+        }
+        print_input_devices();
+        Pa_Terminate();
+        return 0;
     }
 
     // ---- Build the recognizer via the C ABI. Each config struct sets `size`
@@ -197,6 +292,7 @@ main(int argc, char** argv) {
     // Interim results so partial transcripts stream as you speak.
     nemo_speech_asr_recognition_options opts = nemo_speech_asr_recognition_options_default();
     opts.interim_results = true;
+    opts.language_code = language;
     opts.enable_speaker_diarization = diar_model != nullptr;
 
     nemo_speech_asr_stream* stream = nullptr;
@@ -208,7 +304,7 @@ main(int argc, char** argv) {
         return 2;
     }
 
-    // ---- PortAudio capture at the model rate, mono float32. ----
+    // ---- PortAudio capture at the device's native rate, mono float32. ----
     if (Pa_Initialize() != paNoError) {
         std::fprintf(stderr, "[transcribe_live] Pa_Initialize failed\n");
         nemo_speech_asr_stream_close(stream);
@@ -243,12 +339,46 @@ main(int argc, char** argv) {
     in_params.suggestedLatency = dev_info->defaultLowInputLatency;
     in_params.hostApiSpecificStreamInfo = nullptr;
 
+    const double capture_rate = dev_info->defaultSampleRate;
+    if (capture_rate <= 0.0) {
+        std::fprintf(stderr, "[transcribe_live] device has no default sample rate\n");
+        Pa_Terminate();
+        nemo_speech_asr_stream_close(stream);
+        nemo_speech_asr_destroy(recognizer);
+        return 3;
+    }
+
+    PaError format_err = Pa_IsFormatSupported(&in_params, nullptr, capture_rate);
+    if (format_err != paFormatIsSupported) {
+        std::fprintf(
+            stderr, "[transcribe_live] device %d does not support %.0f Hz float mono: %s; trying int16\n",
+            static_cast<int>(dev), capture_rate, Pa_GetErrorText(format_err));
+        in_params.sampleFormat = paInt16;
+        g_capture_int16.store(true);
+        format_err = Pa_IsFormatSupported(&in_params, nullptr, capture_rate);
+        if (format_err != paFormatIsSupported) {
+            print_portaudio_error("Pa_IsFormatSupported", format_err);
+            Pa_Terminate();
+            nemo_speech_asr_stream_close(stream);
+            nemo_speech_asr_destroy(recognizer);
+            return 3;
+        }
+    }
+
     PaStream* pa_stream = nullptr;
     PaError err = Pa_OpenStream(
-        &pa_stream, &in_params, nullptr, kSampleRate, paFramesPerBufferUnspecified, paClipOff,
+        &pa_stream, &in_params, nullptr, capture_rate, paFramesPerBufferUnspecified, paClipOff,
         capture_cb, nullptr);
+    if (err != paNoError && in_params.sampleFormat == paFloat32) {
+        std::fprintf(stderr, "[transcribe_live] float capture failed; retrying int16\n");
+        in_params.sampleFormat = paInt16;
+        g_capture_int16.store(true);
+        err = Pa_OpenStream(
+            &pa_stream, &in_params, nullptr, capture_rate, paFramesPerBufferUnspecified, paClipOff,
+            capture_cb, nullptr);
+    }
     if (err != paNoError) {
-        std::fprintf(stderr, "[transcribe_live] Pa_OpenStream failed: %s\n", Pa_GetErrorText(err));
+        print_portaudio_error("Pa_OpenStream", err);
         Pa_Terminate();
         nemo_speech_asr_stream_close(stream);
         nemo_speech_asr_destroy(recognizer);
@@ -263,13 +393,16 @@ main(int argc, char** argv) {
         return 3;
     }
     std::fprintf(
-        stderr, "[transcribe_live] listening on \"%s\" — Ctrl-C to stop\n", dev_info->name);
+        stderr, "[transcribe_live] listening on \"%s\" (%.0f Hz %s -> %d Hz) — Ctrl-C to stop\n",
+        dev_info->name, capture_rate, g_capture_int16.load() ? "int16" : "float32", kModelSampleRate);
 
     std::signal(SIGINT, on_sigint);
 
     // ---- Stream loop: drain mic -> push -> pull results. ----
     std::string last_printed;
     std::vector<float> scratch;
+    std::vector<float> model_samples;
+    LinearResampler resampler(capture_rate);
     while (g_running.load()) {
         scratch.clear();
         {
@@ -277,8 +410,13 @@ main(int argc, char** argv) {
             scratch.swap(g_queue.buf);
         }
         if (!scratch.empty()) {
+            model_samples.clear();
+            resampler.process(scratch, model_samples);
+            if (model_samples.empty()) {
+                continue;
+            }
             if (nemo_speech_asr_stream_push_f32(
-                    stream, scratch.data(), scratch.size(), kSampleRate) != NEMO_SPEECH_ASR_OK) {
+                    stream, model_samples.data(), model_samples.size(), kModelSampleRate) != NEMO_SPEECH_ASR_OK) {
                 std::fprintf(
                     stderr, "[transcribe_live] push failed: %s\n", nemo_speech_asr_last_error());
                 break;
