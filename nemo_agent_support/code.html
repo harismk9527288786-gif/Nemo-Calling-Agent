@@ -1,0 +1,174 @@
+<!DOCTYPE html><html class="light" lang="en" style="width: 1280px; height: 1088px; overflow: hidden; position: relative;"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Nemo Agent - Help Center</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary-container": "#ffede7",
+                      "on-tertiary": "#ffffff",
+                      "surface-container-lowest": "#ffffff",
+                      "inverse-primary": "#b4c5ff",
+                      "surface-bright": "#faf8ff",
+                      "secondary": "#006c4a",
+                      "surface-container": "#eaedff",
+                      "secondary-fixed": "#85f8c4",
+                      "status-emerald": "#10b981",
+                      "on-primary-container": "#eeefff",
+                      "border-subtle": "#e2e8f0",
+                      "primary-container": "#2563eb",
+                      "on-primary-fixed": "#00174b",
+                      "tertiary": "#973400",
+                      "outline": "#737686",
+                      "on-primary": "#ffffff",
+                      "error": "#ba1a1a",
+                      "surface-dim": "#f8fafc",
+                      "tertiary-fixed-dim": "#ffb599",
+                      "tertiary-fixed": "#ffdbce",
+                      "surface-container-highest": "#dae2fd",
+                      "on-primary-fixed-variant": "#003ea8",
+                      "background": "#faf8ff",
+                      "inverse-on-surface": "#eef0ff",
+                      "on-surface-variant": "#434655",
+                      "on-error": "#ffffff",
+                      "inverse-surface": "#283044",
+                      "on-secondary-container": "#00714e",
+                      "on-secondary-fixed": "#002114",
+                      "outline-variant": "#c3c6d7",
+                      "secondary-fixed-dim": "#68dba9",
+                      "secondary-container": "#82f5c1",
+                      "on-tertiary-fixed-variant": "#7f2b00",
+                      "surface-tint": "#0053db",
+                      "primary-fixed": "#dbe1ff",
+                      "on-surface": "#131b2e",
+                      "on-secondary-fixed-variant": "#005137",
+                      "error-container": "#ffdad6",
+                      "on-error-container": "#93000a",
+                      "tertiary-container": "#c04400",
+                      "on-secondary": "#ffffff",
+                      "primary": "#004ac6",
+                      "surface-container-high": "#e2e7ff",
+                      "on-surface-muted": "#64748b",
+                      "on-background": "#131b2e",
+                      "surface-variant": "#dae2fd",
+                      "surface": "#ffffff",
+                      "primary-fixed-dim": "#b4c5ff",
+                      "surface-container-low": "#f2f3ff",
+                      "on-tertiary-fixed": "#370e00"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "container-padding": "24px",
+                      "grid-gutter": "20px",
+                      "sidebar-width": "280px",
+                      "stack-gap-md": "16px",
+                      "stack-gap-lg": "32px",
+                      "stack-gap-sm": "8px"
+              },
+              "fontFamily": {
+                      "body-sm": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ],
+                      "display-metrics": [
+                              "Inter"
+                      ],
+                      "transcript-text": [
+                              "Inter"
+                      ],
+                      "headline-lg": [
+                              "Inter"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "label-mono": [
+                              "JetBrains Mono"
+                      ]
+              },
+              "fontSize": {
+                      "body-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "18px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "display-metrics": [
+                              "36px",
+                              {
+                                      "lineHeight": "44px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "transcript-text": [
+                              "14px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-mono": [
+                              "11px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ]
+              }
+            },
+          },
+        }
+      </script>
+</head>
+<body class="bg-surface text-on-surface font-body-md min-h-screen selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopNavBar -->
+<header class="fixed top-0 right-0 w-full md:w-[calc(100%-280px)] z-40 bg-surface/80 backdrop-blur-md border-b border-border-subtle shadow-sm flex justify-between items-center h-16 px-container-padding transition-all duration-300"><div class="flex items-center gap-3"><h2 class="font-headline-md text-headline-md font-semibold text-on-surface">Support &amp; Help Center</h2><div class="hidden lg:flex items-center gap-2 bg-emerald-50 px-2.5 py-1 rounded-full border border-status-emerald/20"><div class="w-2 h-2 rounded-full bg-status-emerald animate-pulse"></div><span class="font-label-mono text-[10px] text-status-emerald font-semibold uppercase tracking-wider">Engineers Online</span></div></div><div class="hidden md:flex items-center flex-1 max-w-md mx-6 relative"><span class="material-symbols-outlined absolute left-3 text-on-surface-muted pointer-events-none" data-icon="search">search</span><input class="w-full bg-surface-container border-transparent rounded-lg py-2 pl-10 pr-4 text-on-surface focus:bg-surface focus:border-primary focus:ring-0 transition-colors placeholder:text-on-surface-muted font-body-md" placeholder="Search documentation, tickets, or guides..." type="text"></div><div class="flex items-center gap-2"><button class="p-2 text-on-surface-muted hover:bg-surface-container hover:text-on-surface rounded-full transition-colors relative"><span class="material-symbols-outlined" data-icon="notifications">notifications</span><span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border border-surface"></span></button><button class="p-2 text-on-surface-muted hover:bg-surface-container hover:text-on-surface rounded-full transition-colors"><span class="material-symbols-outlined" data-icon="help_outline">help_outline</span></button><div class="flex items-center gap-2.5 ml-2 pl-2 border-l border-border-subtle cursor-pointer"><div class="w-8 h-8 rounded-full overflow-hidden border border-border-subtle shrink-0"><img alt="User avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida/AEtjO1XdtcP2J4pQegvjd5n1TDpw__sWwgAxVVm7zkEQabHv-Sy59FlQx1dsgnyGzyawxI_p1DfFBC58Z9rJ-dYT-S31qhVG19vTSy2Tab-eOSNH1e9ixv_7oV-aN1BlByXMDjWZ1cTKXnfgulOypxY5rvc3VdqkajU43ZQxz2MhbRgcLAix9Ovl5-WkihEBZMWXahDURyAt7Mdhy1c_fGoMnQcVH2Jlwg0k0WRj55ixqfDwdsc0EffZ5jQgPDc"></div><div class="hidden md:flex flex-col text-left"><span class="text-xs font-semibold text-on-surface leading-tight">Admin User</span><span class="font-label-mono text-[10px] text-on-surface-muted leading-tight">Operations</span></div></div></div></header>
+<!-- SideNavBar -->
+<nav class="fixed left-0 top-0 h-screen w-[280px] bg-surface border-r border-border-subtle flex flex-col py-6 z-50 transition-transform duration-300 -translate-x-full md:translate-x-0 hidden md:flex"><div class="px-6 mb-6 flex flex-col gap-4"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center overflow-hidden border border-border-subtle shrink-0 shadow-sm"><img alt="Nemo Agent Logo" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4i6V-fF1CyKy9NwDjqT3jaxvYy2Cb4WH-ehm9dB5ia4EmnlRG5zBO_VpBKFqWQBcdrNm0gZ9iJTt9Xj4GxxEELIWfiEYYKT6NzB3RGHcgBY4o5q6qAeEhU43-tt0XmQzpAeaP8HLkJisbCrx9pYSH5Q4wMq27hTCHpnRk6_XLv4VTRdQq6yudt0dhMbT5THYnG79xk7lCg943Jp_G1Vbm6G7FdaP_ActlyS2P7pxdlTKZWi4nLcK8C3iubLuKuLGCTw"></div><div><h1 class="text-headline-md font-headline-md font-bold text-primary leading-tight">Nemo Agent</h1><p class="font-body-sm text-body-sm text-on-surface-muted leading-tight">Autonomous Receptionist</p></div></div><button class="w-full bg-primary text-on-primary font-medium py-2.5 px-4 rounded-lg flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors shadow-sm font-body-sm text-body-sm"><span class="material-symbols-outlined text-[18px] font-bold" data-icon="add">add</span><span class="">New Campaign</span></button></div><div class="flex-1 flex flex-col gap-1 px-3"><a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-muted hover:bg-surface-container hover:text-on-surface transition-colors duration-200 ease-in-out font-body-md text-body-md" href="#"><span class="material-symbols-outlined text-[20px]" data-icon="dashboard">dashboard</span><span class="">Dashboard</span></a><a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-muted hover:bg-surface-container hover:text-on-surface transition-colors duration-200 ease-in-out font-body-md text-body-md" href="#"><span class="material-symbols-outlined text-[20px]" data-icon="phone_in_talk">phone_in_talk</span><span class="">Live Calls</span><span class="ml-auto w-2 h-2 rounded-full bg-status-emerald"></span></a><a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-muted hover:bg-surface-container hover:text-on-surface transition-colors duration-200 ease-in-out font-body-md text-body-md" href="#"><span class="material-symbols-outlined text-[20px]" data-icon="history">history</span><span class="">Call History</span></a><a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-muted hover:bg-surface-container hover:text-on-surface transition-colors duration-200 ease-in-out font-body-md text-body-md" href="#"><span class="material-symbols-outlined text-[20px]" data-icon="event_repeat">event_repeat</span><span class="">Follow-ups</span></a><a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-muted hover:bg-surface-container hover:text-on-surface transition-colors duration-200 ease-in-out font-body-md text-body-md" href="#"><span class="material-symbols-outlined text-[20px]" data-icon="dns">dns</span><span class="">System Status</span></a><a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-muted hover:bg-surface-container hover:text-on-surface transition-colors duration-200 ease-in-out font-body-md text-body-md" href="#"><span class="material-symbols-outlined text-[20px]" data-icon="menu_book">menu_book</span><span class="">Knowledge Base</span></a><div class="mt-auto flex flex-col gap-1 border-t border-border-subtle pt-3"><a class="flex items-center gap-3 px-3 py-2.5 font-semibold bg-primary/10 text-primary rounded-lg shadow-sm transition-colors duration-200 ease-in-out font-body-md text-body-md" href="#"><span class="material-symbols-outlined text-[20px] text-primary" data-icon="support_agent">support_agent</span><span class="">Support</span></a><a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-muted hover:bg-surface-container hover:text-on-surface transition-colors duration-200 ease-in-out font-body-md text-body-md" href="#"><span class="material-symbols-outlined text-[20px]" data-icon="settings">settings</span><span class="">Settings</span></a></div></div></nav>
+<!-- Main Content Canvas -->
+<main class="md:ml-[280px] min-h-screen bg-background pt-16 pb-12 flex flex-col"><section class="bg-surface border-b border-border-subtle pt-10 pb-12 px-container-padding relative overflow-hidden"><div class="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-surface-container-high via-surface to-surface pointer-events-none"></div><div class="max-w-4xl mx-auto relative z-10 text-center"><div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container text-primary font-label-mono text-label-mono mb-3"><span class="material-symbols-outlined text-[16px]">contact_support</span> 24/7 Priority Support</div><h2 class="font-headline-lg text-headline-lg font-bold text-on-surface mb-3">How can we help you today?</h2><p class="font-body-md text-on-surface-muted mb-6 max-w-2xl mx-auto">Search guides, check ongoing support tickets, explore API docs, or reach out to our dedicated voice AI engineering specialists.</p><div class="relative max-w-2xl mx-auto shadow-[0px_12px_32px_rgba(15,23,42,0.08)] rounded-lg"><span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-muted text-[24px]" data-icon="search">search</span><input class="w-full bg-surface border border-border-subtle rounded-lg pl-12 pr-4 py-3.5 font-body-md text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-sm" placeholder="Search troubleshooting guides, voice latency setup, or submit a ticket..." type="text"></div></div></section><div class="max-w-6xl mx-auto px-container-padding py-10 flex flex-col gap-stack-lg w-full"><section><div class="flex items-center justify-between mb-5"><h3 class="font-label-mono text-label-mono text-on-surface-muted uppercase tracking-wider">Help &amp; Support Categories</h3><span class="font-body-sm text-primary hover:underline cursor-pointer flex items-center gap-1">Browse all docs <span class="material-symbols-outlined text-[16px]">arrow_forward</span></span></div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-grid-gutter"><a class="group bg-surface border border-border-subtle p-6 rounded-xl hover:shadow-[0px_4px_12px_rgba(15,23,42,0.05)] hover:border-primary/30 transition-all duration-300 flex flex-col items-start gap-3" href="#"><div class="w-12 h-12 bg-surface-container rounded-lg flex items-center justify-center group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors"><span class="material-symbols-outlined text-primary group-hover:text-on-primary-container" data-icon="rocket_launch">rocket_launch</span></div><div><h4 class="font-headline-md text-[16px] font-semibold text-on-surface mb-1">Getting Started</h4><p class="font-body-sm text-on-surface-muted leading-relaxed">Quickstart walkthroughs, SIP trunk connection, and agent provisioning.</p></div></a><a class="group bg-surface border border-border-subtle p-6 rounded-xl hover:shadow-[0px_4px_12px_rgba(15,23,42,0.05)] hover:border-primary/30 transition-all duration-300 flex flex-col items-start gap-3" href="#"><div class="w-12 h-12 bg-surface-container rounded-lg flex items-center justify-center group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors"><span class="material-symbols-outlined text-primary group-hover:text-on-primary-container" data-icon="api">api</span></div><div><h4 class="font-headline-md text-[16px] font-semibold text-on-surface mb-1">Voice API</h4><p class="font-body-sm text-on-surface-muted leading-relaxed">REST endpoints, real-time WebSocket events, webhooks, and SDKs.</p></div></a><a class="group bg-surface border border-border-subtle p-6 rounded-xl hover:shadow-[0px_4px_12px_rgba(15,23,42,0.05)] hover:border-primary/30 transition-all duration-300 flex flex-col items-start gap-3" href="#"><div class="w-12 h-12 bg-surface-container rounded-lg flex items-center justify-center group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors"><span class="material-symbols-outlined text-primary group-hover:text-on-primary-container" data-icon="credit_card">credit_card</span></div><div><h4 class="font-headline-md text-[16px] font-semibold text-on-surface mb-1">Billing &amp; Plans</h4><p class="font-body-sm text-on-surface-muted leading-relaxed">Minutes tracking, invoice management, seat tiers, and automated top-ups.</p></div></a><a class="group bg-surface border border-border-subtle p-6 rounded-xl hover:shadow-[0px_4px_12px_rgba(15,23,42,0.05)] hover:border-primary/30 transition-all duration-300 flex flex-col items-start gap-3" href="#"><div class="w-12 h-12 bg-surface-container rounded-lg flex items-center justify-center group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors"><span class="material-symbols-outlined text-primary group-hover:text-on-primary-container" data-icon="security">security</span></div><div><h4 class="font-headline-md text-[16px] font-semibold text-on-surface mb-1">Account Security</h4><p class="font-body-sm text-on-surface-muted leading-relaxed">Role permissions, SSO / SAML, audit logs, and HIPAA/SOC-2 compliance.</p></div></a><a class="group bg-surface border border-border-subtle p-6 rounded-xl hover:shadow-[0px_4px_12px_rgba(15,23,42,0.05)] hover:border-primary/30 transition-all duration-300 flex flex-col items-start gap-3" href="#"><div class="w-12 h-12 bg-surface-container rounded-lg flex items-center justify-center group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors"><span class="material-symbols-outlined text-primary group-hover:text-on-primary-container" data-icon="alt_route">alt_route</span></div><div><h4 class="font-headline-md text-[16px] font-semibold text-on-surface mb-1">Call Routing</h4><p class="font-body-sm text-on-surface-muted leading-relaxed">IVR trees, warm transfers, fallback lines, and business hour rules.</p></div></a><a class="group bg-surface border border-border-subtle p-6 rounded-xl hover:shadow-[0px_4px_12px_rgba(15,23,42,0.05)] hover:border-primary/30 transition-all duration-300 flex flex-col items-start gap-3" href="#"><div class="w-12 h-12 bg-surface-container rounded-lg flex items-center justify-center group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors"><span class="material-symbols-outlined text-primary group-hover:text-on-primary-container" data-icon="hub">hub</span></div><div><h4 class="font-headline-md text-[16px] font-semibold text-on-surface mb-1">Integrations</h4><p class="font-body-sm text-on-surface-muted leading-relaxed">HubSpot, Salesforce, Zendesk, Zapier, and custom CRM sync connectors.</p></div></a></div></section><section class="grid grid-cols-1 lg:grid-cols-3 gap-grid-gutter"><div class="lg:col-span-2 bg-surface border border-border-subtle rounded-xl p-6"><div class="flex items-center justify-between mb-4"><h3 class="font-headline-md text-headline-md font-bold text-on-surface">Recent Support Tickets</h3><button class="flex items-center gap-1 text-primary font-body-sm font-medium hover:underline"><span class="material-symbols-outlined text-[18px]">add</span> New Ticket</button></div><div class="flex flex-col divide-y divide-border-subtle"><div class="py-3 flex items-center justify-between gap-4"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-status-emerald/10 text-status-emerald flex items-center justify-center"><span class="material-symbols-outlined text-[18px]">check_circle</span></div><div><p class="font-body-md font-medium text-on-surface">Websocket audio latency under peak traffic</p><p class="font-label-mono text-body-sm text-on-surface-muted">#TK-8041 • Updated 2 hours ago</p></div></div><span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-surface-container text-on-surface-muted">Resolved</span></div><div class="py-3 flex items-center justify-between gap-4"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center"><span class="material-symbols-outlined text-[18px]">sync</span></div><div><p class="font-body-md font-medium text-on-surface">Custom CRM webhook signature verification failure</p><p class="font-label-mono text-body-sm text-on-surface-muted">#TK-8120 • Updated 35 mins ago</p></div></div><span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-primary-container text-on-primary-container">In Progress</span></div><div class="py-3 flex items-center justify-between gap-4"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-surface-container text-on-surface-muted flex items-center justify-center"><span class="material-symbols-outlined text-[18px]">pending</span></div><div><p class="font-body-md font-medium text-on-surface">Porting dedicated enterprise DID numbers</p><p class="font-label-mono text-body-sm text-on-surface-muted">#TK-8199 • Updated yesterday</p></div></div><span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-surface-container text-on-surface-muted">Queued</span></div></div></div><div class="bg-surface border border-border-subtle rounded-xl p-6 flex flex-col justify-between"><div class="space-y-3"><div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary"><span class="material-symbols-outlined text-[24px]">headset_mic</span></div><h4 class="font-headline-md text-headline-md font-bold text-on-surface">Need Direct Assistance?</h4><p class="font-body-sm text-on-surface-muted leading-relaxed">Our AI Voice engineers are on call 24/7 to resolve live call degradation, carrier routing issues, and custom models.</p></div><div class="mt-6 flex flex-col gap-2"><button class="w-full py-2.5 px-4 bg-primary text-on-primary rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors"><span class="material-symbols-outlined text-[20px]">chat</span> Start Live Chat</button><button class="w-full py-2.5 px-4 border border-border-subtle text-on-surface rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-surface-container transition-colors"><span class="material-symbols-outlined text-[20px]">call</span> Request Engineer Callback</button></div></div></section></div></main>
+<div aria-hidden="true" data-snapdom-sandbox="true" id="snapdom-sandbox" style="position: absolute; left: -9999px; top: -9999px; width: 0px; height: 0px; overflow: hidden;"></div>
+
+
+</body></html>

@@ -1,0 +1,239 @@
+<!DOCTYPE html><html class="h-full bg-surface" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Login - Nemo Agent</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Google Fonts: Inter and JetBrains Mono -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-high": "#e2e7ff",
+                    "on-background": "#131b2e",
+                    "inverse-on-surface": "#eef0ff",
+                    "on-surface": "#131b2e",
+                    "outline-variant": "#c3c6d7",
+                    "tertiary-fixed-dim": "#ffb599",
+                    "on-primary-fixed-variant": "#003ea8",
+                    "primary-container": "#2563eb",
+                    "on-secondary-container": "#00714e",
+                    "surface-bright": "#faf8ff",
+                    "tertiary-container": "#c04400",
+                    "tertiary-fixed": "#ffdbce",
+                    "on-secondary-fixed": "#002114",
+                    "on-secondary": "#ffffff",
+                    "outline": "#737686",
+                    "secondary": "#006c4a",
+                    "background": "#faf8ff",
+                    "secondary-fixed": "#85f8c4",
+                    "surface-container-low": "#f2f3ff",
+                    "secondary-fixed-dim": "#68dba9",
+                    "primary": "#004ac6",
+                    "on-surface-muted": "#64748b",
+                    "on-primary-container": "#eeefff",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container-highest": "#dae2fd",
+                    "border-subtle": "#e2e8f0",
+                    "on-tertiary-fixed-variant": "#7f2b00",
+                    "status-emerald": "#10b981",
+                    "primary-fixed": "#dbe1ff",
+                    "on-tertiary-fixed": "#370e00",
+                    "surface-container": "#f1f5f9",
+                    "surface-dim": "#d2d9f4",
+                    "on-surface-variant": "#434655",
+                    "surface-tint": "#0053db",
+                    "on-tertiary-container": "#ffede7",
+                    "on-error": "#ffffff",
+                    "primary-fixed-dim": "#b4c5ff",
+                    "surface-variant": "#dae2fd",
+                    "surface": "#ffffff",
+                    "inverse-surface": "#283044",
+                    "on-primary": "#ffffff",
+                    "on-primary-fixed": "#00174b",
+                    "on-tertiary": "#ffffff",
+                    "inverse-primary": "#b4c5ff",
+                    "tertiary": "#973400",
+                    "error": "#ba1a1a",
+                    "secondary-container": "#82f5c1",
+                    "on-error-container": "#93000a",
+                    "on-secondary-fixed-variant": "#005137",
+                    "error-container": "#ffdad6"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "stack-gap-sm": "8px",
+                    "sidebar-width": "280px",
+                    "stack-gap-md": "16px",
+                    "container-padding": "24px",
+                    "stack-gap-lg": "32px",
+                    "grid-gutter": "20px"
+            },
+            "fontFamily": {
+                    "body-sm": ["Inter"],
+                    "transcript-text": ["Inter"],
+                    "label-mono": ["JetBrains Mono"],
+                    "display-metrics": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "headline-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "body-sm": ["12px", {"lineHeight": "18px", "fontWeight": "400"}],
+                    "transcript-text": ["14px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-mono": ["11px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                    "display-metrics": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-md": ["18px", {"lineHeight": "28px", "fontWeight": "500"}],
+                    "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+</head>
+<body class="h-full bg-background text-on-surface antialiased font-body-md flex min-h-screen selection:bg-surface-container-highest">
+<div class="flex flex-1 w-full flex-col lg:flex-row">
+<!-- Left Side: Brand Area -->
+<div class="hidden lg:flex lg:w-1/2 flex-col justify-between px-16 py-24 bg-surface-container-low border-r border-border-subtle relative overflow-hidden">
+<!-- Decorative subtle ambient background -->
+<div class="absolute inset-0 pointer-events-none" style="background: radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.03) 0%, transparent 40%);"></div>
+<div class="relative z-10 flex flex-col h-full">
+<!-- Logo -->
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-primary-container rounded-lg flex items-center justify-center text-on-primary"><img src="https://lh3.googleusercontent.com/aida/AEtjO1Vpmtf2kKbAjcwbXQnmggj0mPJWY3GbEYBeVZHBKa59uDBzX7eT5XjxSEB0urgCjBABUyfbJHcinyunMs7CyrGx-M4bk8Vjor_xRuEj7f_8kWFzNTG_4Ak06z6pNiYwRlud6QCajg1kM4v2uFbPIBvWjKmCnPGTvdmZ37vTWRdzNSjF9hlVTufLdKjBXZvMQICTh82U6R8hD-DLk8zMm5TTpd7KiyucbuknraK2U9FULMrVm3tjt5lMYIw" alt="Nemo Agent Logo" class="w-full h-full object-contain rounded-lg"></div>
+<span class="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight">Nemo Agent</span>
+</div>
+<div class="mt-auto mb-24 max-w-md">
+<h1 class="font-display-metrics text-display-metrics text-on-surface mb-6 leading-tight">Autonomous AI<br>Receptionist</h1>
+<p class="font-body-md text-body-md text-on-surface-variant text-base leading-relaxed">
+                        Manage your AI phone calls, conversations, and business knowledge from one seamless command center. Designed for precision and scale.
+                    </p>
+</div>
+<div class="flex items-center gap-2 text-on-surface-muted font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-sm">verified_user</span>
+<span class="">Enterprise-grade security and reliability.</span>
+</div>
+</div>
+</div>
+<!-- Right Side: Login Form -->
+<div class="flex flex-1 flex-col justify-center px-4 py-12 sm:px-6 lg:px-20 xl:px-32 bg-surface">
+<!-- Mobile Logo (Visible only on smaller screens) -->
+<div class="flex items-center gap-3 mb-12 lg:hidden justify-center">
+<div class="w-8 h-8 bg-primary-container rounded flex items-center justify-center text-on-primary"><img src="https://lh3.googleusercontent.com/aida/AEtjO1Vpmtf2kKbAjcwbXQnmggj0mPJWY3GbEYBeVZHBKa59uDBzX7eT5XjxSEB0urgCjBABUyfbJHcinyunMs7CyrGx-M4bk8Vjor_xRuEj7f_8kWFzNTG_4Ak06z6pNiYwRlud6QCajg1kM4v2uFbPIBvWjKmCnPGTvdmZ37vTWRdzNSjF9hlVTufLdKjBXZvMQICTh82U6R8hD-DLk8zMm5TTpd7KiyucbuknraK2U9FULMrVm3tjt5lMYIw" alt="Nemo Agent Logo" class="w-full h-full object-contain rounded"></div>
+<span class="font-headline-md text-headline-md font-bold text-on-surface tracking-tight">Nemo Agent</span>
+</div>
+<div class="mx-auto w-full max-w-md">
+<div class="mb-8 text-center lg:text-left">
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-2">Welcome back</h2>
+<p class="font-body-md text-body-md text-on-surface-muted">Sign in to your Nemo Agent account.</p>
+</div>
+<!-- Global Error Message (Hidden by default, shown for reference) -->
+<div class="hidden mb-6 bg-error-container/20 border border-error-container rounded-lg p-3 flex items-start gap-3">
+<span class="material-symbols-outlined text-error text-sm mt-0.5" style="font-variation-settings: 'FILL' 1;">error</span>
+<p class="font-body-sm text-body-sm text-on-error-container">Email or password is incorrect. Please try again.</p>
+</div>
+<form action="#" class="space-y-5" id="loginForm" method="POST">
+<!-- Email Input -->
+<div>
+<label class="block font-label-mono text-label-mono text-on-surface-variant uppercase mb-2" for="email">Email address</label>
+<div class="relative rounded-md shadow-sm">
+<input aria-invalid="false" class="block w-full rounded-lg border-0 bg-surface-container py-3 px-4 text-on-surface ring-1 ring-inset ring-transparent focus:bg-surface focus:ring-2 focus:ring-inset focus:ring-primary-container sm:text-sm sm:leading-6 transition-all duration-200 outline-none" id="email" name="email" placeholder="Enter your email" required="" type="email">
+</div>
+<!-- Inline Error (Hidden) -->
+<p class="hidden mt-2 font-body-sm text-body-sm text-error flex items-center gap-1" id="email-error">
+<span class="material-symbols-outlined text-xs">info</span>
+                            Enter a valid email address
+                        </p>
+</div>
+<!-- Password Input -->
+<div>
+<label class="block font-label-mono text-label-mono text-on-surface-variant uppercase mb-2" for="password">Password</label>
+<div class="relative rounded-md shadow-sm">
+<input class="block w-full rounded-lg border-0 bg-surface-container py-3 pl-4 pr-10 text-on-surface ring-1 ring-inset ring-transparent focus:bg-surface focus:ring-2 focus:ring-inset focus:ring-primary-container sm:text-sm sm:leading-6 transition-all duration-200 outline-none" id="password" name="password" placeholder="Enter your password" required="" type="password">
+<button class="absolute inset-y-0 right-0 flex items-center pr-3 text-on-surface-muted hover:text-on-surface transition-colors focus:outline-none focus:text-primary-container" id="togglePassword" type="button">
+<span class="material-symbols-outlined text-lg" id="visibilityIcon">visibility_off</span>
+</button>
+</div>
+</div>
+<!-- Form Controls Row -->
+<div class="flex items-center justify-between pt-2">
+<div class="flex items-center">
+<input class="h-4 w-4 rounded border-outline-variant text-primary-container focus:ring-primary-container bg-surface-container cursor-pointer transition-colors duration-200" id="remember-me" name="remember-me" type="checkbox">
+<label class="ml-2 block font-body-sm text-body-sm text-on-surface-variant cursor-pointer select-none" for="remember-me">
+                                Remember me
+                            </label>
+</div>
+<div class="text-sm">
+<a class="font-body-sm text-body-sm font-medium text-primary hover:text-primary-container hover:underline underline-offset-4 transition-all focus:outline-none focus:ring-2 focus:ring-primary-container rounded-sm" href="#">
+                                Forgot password?
+                            </a>
+</div>
+</div>
+<!-- Submit Button -->
+<div class="pt-4">
+<button class="flex w-full justify-center rounded-lg bg-primary-container px-4 py-3 font-body-md text-body-md font-medium text-on-primary shadow-[0px_4px_12px_rgba(37,99,235,0.15)] hover:bg-primary-container/90 hover:shadow-[0px_6px_16px_rgba(37,99,235,0.2)] focus:outline-none focus:ring-2 focus:ring-primary-container focus:ring-offset-2 focus:ring-offset-surface transition-all duration-200" type="submit">
+                            Sign In
+                        </button>
+</div>
+</form>
+<!-- Footer Links -->
+<p class="mt-8 text-center font-body-sm text-body-sm text-on-surface-muted">
+                    Don't have an account? 
+                    <a class="font-medium text-primary hover:text-primary-container hover:underline underline-offset-4 transition-all focus:outline-none focus:ring-2 focus:ring-primary-container rounded-sm" href="#">
+                        Create account
+                    </a>
+</p>
+</div>
+</div>
+</div>
+<!-- Minimal Script for Password Toggle Demo -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggleButton = document.getElementById('togglePassword');
+            const passwordInput = document.getElementById('password');
+            const visibilityIcon = document.getElementById('visibilityIcon');
+
+            toggleButton.addEventListener('click', () => {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                visibilityIcon.textContent = type === 'password' ? 'visibility_off' : 'visibility';
+            });
+
+            // Demo inline error state (uncomment to test visual state)
+            /*
+            const emailInput = document.getElementById('email');
+            const emailError = document.getElementById('email-error');
+            
+            emailInput.classList.remove('ring-transparent', 'focus:ring-primary-container');
+            emailInput.classList.add('ring-error', 'focus:ring-error', 'text-error');
+            emailError.classList.remove('hidden');
+            emailInput.setAttribute('aria-invalid', 'true');
+            */
+        });
+    </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body></html>

@@ -1,0 +1,483 @@
+<!DOCTYPE html><html class="light" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Call History - Nemo Agent</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-highest": "#dae2fd",
+                        "on-secondary-container": "#00714e",
+                        "surface-container": "#f1f5f9",
+                        "status-emerald": "#10b981",
+                        "surface-dim": "#d2d9f4",
+                        "surface-variant": "#dae2fd",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-fixed-variant": "#005137",
+                        "secondary": "#006c4a",
+                        "tertiary-fixed-dim": "#ffb599",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed": "#ffdbce",
+                        "background": "#faf8ff",
+                        "secondary-fixed": "#85f8c4",
+                        "on-background": "#131b2e",
+                        "on-surface": "#131b2e",
+                        "on-primary-fixed": "#00174b",
+                        "tertiary": "#973400",
+                        "surface-container-high": "#e2e7ff",
+                        "on-primary-fixed-variant": "#003ea8",
+                        "on-primary-container": "#eeefff",
+                        "on-tertiary-container": "#ffede7",
+                        "on-tertiary-fixed-variant": "#7f2b00",
+                        "error-container": "#ffdad6",
+                        "on-primary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "on-secondary": "#ffffff",
+                        "surface-bright": "#faf8ff",
+                        "on-surface-muted": "#64748b",
+                        "inverse-on-surface": "#eef0ff",
+                        "border-subtle": "#e2e8f0",
+                        "primary-container": "#2563eb",
+                        "secondary-fixed-dim": "#68dba9",
+                        "on-tertiary": "#ffffff",
+                        "primary": "#004ac6",
+                        "tertiary-container": "#c04400",
+                        "on-surface-variant": "#434655",
+                        "inverse-surface": "#283044",
+                        "on-secondary-fixed": "#002114",
+                        "on-tertiary-fixed": "#370e00",
+                        "surface-tint": "#0053db",
+                        "outline-variant": "#c3c6d7",
+                        "surface-container-low": "#f2f3ff",
+                        "outline": "#737686",
+                        "inverse-primary": "#b4c5ff",
+                        "on-error": "#ffffff",
+                        "surface": "#ffffff",
+                        "secondary-container": "#82f5c1",
+                        "primary-fixed": "#dbe1ff",
+                        "primary-fixed-dim": "#b4c5ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-gap-lg": "32px",
+                        "stack-gap-md": "16px",
+                        "sidebar-width": "280px",
+                        "grid-gutter": "20px",
+                        "stack-gap-sm": "8px",
+                        "container-padding": "24px"
+                    },
+                    "fontFamily": {
+                        "display-metrics": ["Inter"],
+                        "label-mono": ["JetBrains Mono"],
+                        "body-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "transcript-text": ["Inter"],
+                        "headline-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "display-metrics": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "label-mono": ["11px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "transcript-text": ["14px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["18px", { "lineHeight": "28px", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .icon-fill { font-variation-settings: 'FILL' 1; }
+        
+        /* Scrollbar styling for tables and side panels */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex antialiased">
+<!-- SideNavBar -->
+<nav class="fixed left-0 top-0 h-screen w-sidebar-width bg-surface border-r border-border-subtle flex flex-col py-container-padding z-50 transition-transform duration-300 -translate-x-full md:translate-x-0 hidden md:flex">
+<!-- Header -->
+<div class="px-6 mb-6 flex flex-col gap-4"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-xl bg-surface-container-high flex items-center justify-center overflow-hidden border border-border-subtle shrink-0 shadow-sm"><img alt="Nemo Agent Logo" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida/AEtjO1Vpmtf2kKbAjcwbXQnmggj0mPJWY3GbEYBeVZHBKa59uDBzX7eT5XjxSEB0urgCjBABUyfbJHcinyunMs7CyrGx-M4bk8Vjor_xRuEj7f_8kWFzNTG_4Ak06z6pNiYwRlud6QCajg1kM4v2uFbPIBvWjKmCnPGTvdmZ37vTWRdzNSjF9hlVTufLdKjBXZvMQICTh82U6R8hD-DLk8zMm5TTpd7KiyucbuknraK2U9FULMrVm3tjt5lMYIw"></div><div><h1 class="text-headline-md font-headline-md font-bold text-primary leading-tight">Nemo Agent</h1><p class="font-body-sm text-body-sm text-on-surface-muted leading-tight">Autonomous Receptionist</p></div></div><button class="w-full bg-primary text-on-primary font-medium py-2.5 px-4 rounded-lg flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors shadow-sm font-body-sm text-body-sm"><span class="material-symbols-outlined text-[18px] font-bold" data-icon="add">add</span><span class="">New Campaign</span></button></div>
+<!-- Navigation Tabs -->
+<div class="flex-1 flex flex-col gap-1 px-3"><a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-muted hover:bg-surface-container hover:text-on-surface transition-colors duration-200 ease-in-out font-body-md text-body-md" href="#"><span class="material-symbols-outlined text-[20px]" data-icon="dashboard">dashboard</span><span class="">Dashboard</span></a><a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-muted hover:bg-surface-container hover:text-on-surface transition-colors duration-200 ease-in-out font-body-md text-body-md" href="#"><span class="material-symbols-outlined text-[20px]" data-icon="phone_in_talk">phone_in_talk</span><span class="">Live Calls</span></a><a class="flex items-center gap-3 px-4 py-2.5 font-semibold bg-tertiary-fixed text-tertiary rounded-xl shadow-sm transition-colors duration-200 ease-in-out font-body-md text-body-md" href="#"><span class="material-symbols-outlined text-[20px] icon-fill text-tertiary" data-icon="history">history</span><span class="">Call History</span></a><a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-muted hover:bg-surface-container hover:text-on-surface transition-colors duration-200 ease-in-out font-body-md text-body-md" href="#"><span class="material-symbols-outlined text-[20px]" data-icon="contact_mail">contact_mail</span><span class="">Follow-ups</span></a><a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-muted hover:bg-surface-container hover:text-on-surface transition-colors duration-200 ease-in-out font-body-md text-body-md" href="#"><span class="material-symbols-outlined text-[20px]" data-icon="dns">dns</span><span class="">System Status</span></a><a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-muted hover:bg-surface-container hover:text-on-surface transition-colors duration-200 ease-in-out font-body-md text-body-md" href="#"><span class="material-symbols-outlined text-[20px]" data-icon="menu_book">menu_book</span><span class="">Knowledge Base</span></a><div class="mt-auto flex flex-col gap-1 border-t border-border-subtle pt-3"><a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-muted hover:bg-surface-container hover:text-on-surface transition-colors duration-200 ease-in-out font-body-md text-body-md" href="#"><span class="material-symbols-outlined text-[20px]" data-icon="support_agent">support_agent</span><span class="">Support</span></a><a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-muted hover:bg-surface-container hover:text-on-surface transition-colors duration-200 ease-in-out font-body-md text-body-md" href="#"><span class="material-symbols-outlined text-[20px]" data-icon="settings">settings</span><span class="">Settings</span></a></div></div>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="flex-1 md:ml-sidebar-width flex flex-col min-h-screen">
+<!-- TopNavBar -->
+<header class="fixed top-0 right-0 w-full md:w-[calc(100%-280px)] z-40 bg-surface/80 backdrop-blur-md border-b border-border-subtle shadow-sm flex justify-between items-center h-16 px-container-padding transition-all duration-300">
+<!-- Mobile Menu Toggle & Brand (Visible on mobile) -->
+<div class="flex items-center gap-4 md:hidden"><button class="p-2 -ml-2 text-on-surface hover:bg-surface-container rounded-full" id="mobile-menu-btn"><span class="material-symbols-outlined" data-icon="menu">menu</span></button><div class="w-9 h-9 rounded-xl bg-surface-container-high flex items-center justify-center overflow-hidden border border-border-subtle shrink-0"><img alt="Nemo Agent Logo" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida/AEtjO1Vpmtf2kKbAjcwbXQnmggj0mPJWY3GbEYBeVZHBKa59uDBzX7eT5XjxSEB0urgCjBABUyfbJHcinyunMs7CyrGx-M4bk8Vjor_xRuEj7f_8kWFzNTG_4Ak06z6pNiYwRlud6QCajg1kM4v2uFbPIBvWjKmCnPGTvdmZ37vTWRdzNSjF9hlVTufLdKjBXZvMQICTh82U6R8hD-DLk8zMm5TTpd7KiyucbuknraK2U9FULMrVm3tjt5lMYIw"></div><div class="flex flex-col"><h1 class="text-headline-md font-headline-md font-bold text-primary leading-tight">Nemo Agent</h1><p class="font-body-sm text-[10px] text-on-surface-muted leading-tight">Autonomous Receptionist</p></div></div>
+<!-- Search (Left aligned on Desktop) -->
+<div class="hidden md:flex items-center flex-1 max-w-md relative">
+<span class="material-symbols-outlined absolute left-3 text-on-surface-muted pointer-events-none" data-icon="search">search</span>
+<input class="w-full bg-surface-container border-transparent rounded-lg py-2 pl-10 pr-4 text-on-surface focus:bg-surface focus:border-primary focus:ring-0 transition-colors placeholder:text-on-surface-muted font-body-md" placeholder="Search calls, numbers, or transcripts..." type="text">
+</div>
+<!-- Trailing Actions -->
+<div class="flex items-center gap-2"><button class="p-2 text-on-surface-muted hover:bg-surface-container-lowest hover:text-on-surface rounded-full transition-colors relative"><span class="material-symbols-outlined" data-icon="notifications">notifications</span><span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border border-surface"></span></button><button class="p-2 text-on-surface-muted hover:bg-surface-container-lowest hover:text-on-surface rounded-full transition-colors"><span class="material-symbols-outlined" data-icon="help_outline">help_outline</span></button><div class="flex items-center gap-2.5 ml-2 pl-2 border-l border-border-subtle cursor-pointer"><div class="w-8 h-8 rounded-full overflow-hidden border border-border-subtle shrink-0"><img alt="User avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida/AEtjO1XdtcP2J4pQegvjd5n1TDpw__sWwgAxVVm7zkEQabHv-Sy59FlQx1dsgnyGzyawxI_p1DfFBC58Z9rJ-dYT-S31qhVG19vTSy2Tab-eOSNH1e9ixv_7oV-aN1BlByXMDjWZ1cTKXnfgulOypxY5rvc3VdqkajU43ZQxz2MhbRgcLAix9Ovl5-WkihEBZMWXahDURyAt7Mdhy1c_fGoMnQcVH2Jlwg0k0WRj55ixqfDwdsc0EffZ5jQgPDc"></div><div class="hidden md:flex flex-col text-left"><span class="text-xs font-semibold text-on-surface leading-tight">Admin User</span><span class="font-label-mono text-[10px] text-on-surface-muted leading-tight">Operations</span></div></div></div>
+</header>
+<!-- Page Content -->
+<main class="flex-1 pt-[88px] px-container-padding pb-container-padding flex flex-col xl:flex-row gap-grid-gutter w-full max-w-[1600px] mx-auto">
+<!-- Left Column: History & Grid -->
+<div class="flex-1 flex flex-col gap-stack-md min-w-0">
+<!-- Page Header -->
+<div class="mb-2">
+<h2 class="font-headline-lg text-headline-lg text-on-background">Call History</h2>
+<p class="font-body-md text-body-md text-on-surface-muted mt-1">Review and analyze all AI-handled phone conversations.</p>
+</div>
+<!-- Metrics Grid -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-stack-md">
+<!-- Metric Card 1 -->
+<div class="bg-surface rounded-xl p-4 border border-border-subtle shadow-[0_2px_4px_rgba(15,23,42,0.02)]">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-mono text-label-mono text-on-surface-muted uppercase">Total Calls</span>
+<span class="material-symbols-outlined text-on-surface-muted text-[18px]" data-icon="phone_all">replace_video</span>
+</div>
+<div class="font-display-metrics text-display-metrics text-on-surface">1,284</div>
+<div class="mt-2 text-body-sm font-body-sm text-status-emerald flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="trending_up">trending_up</span> +12.5% this week
+                        </div>
+</div>
+<!-- Metric Card 2 -->
+<div class="bg-surface rounded-xl p-4 border border-border-subtle shadow-[0_2px_4px_rgba(15,23,42,0.02)]">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-mono text-label-mono text-on-surface-muted uppercase">Completed</span>
+<span class="material-symbols-outlined text-on-surface-muted text-[18px]" data-icon="task_alt">task_alt</span>
+</div>
+<div class="font-display-metrics text-display-metrics text-on-surface">1,156</div>
+<div class="mt-2 text-body-sm font-body-sm text-status-emerald flex items-center gap-1">
+                            90% success rate
+                        </div>
+</div>
+<!-- Metric Card 3 -->
+<div class="bg-surface rounded-xl p-4 border border-border-subtle shadow-[0_2px_4px_rgba(15,23,42,0.02)]">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-mono text-label-mono text-on-surface-muted uppercase">Missed/Failed</span>
+<span class="material-symbols-outlined text-on-surface-muted text-[18px]" data-icon="phone_missed">phone_missed</span>
+</div>
+<div class="font-display-metrics text-display-metrics text-on-surface">87</div>
+<div class="mt-2 text-body-sm font-body-sm text-on-error-container flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="trending_down">trending_down</span> Requires attention
+                        </div>
+</div>
+<!-- Metric Card 4 -->
+<div class="bg-surface rounded-xl p-4 border border-border-subtle shadow-[0_2px_4px_rgba(15,23,42,0.02)]">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-mono text-label-mono text-on-surface-muted uppercase">Avg Duration</span>
+<span class="material-symbols-outlined text-on-surface-muted text-[18px]" data-icon="timer">timer</span>
+</div>
+<div class="font-display-metrics text-display-metrics text-on-surface">2m 18s</div>
+<div class="mt-2 text-body-sm font-body-sm text-on-surface-muted flex items-center gap-1">
+                            Optimal range
+                        </div>
+</div>
+</div>
+<!-- Main Data Section -->
+<div class="bg-surface rounded-xl border border-border-subtle shadow-[0_4px_12px_rgba(15,23,42,0.02)] flex-1 flex flex-col min-h-[500px] overflow-hidden">
+<!-- Toolbar -->
+<div class="p-4 border-b border-border-subtle flex flex-col sm:flex-row gap-4 justify-between items-center bg-background/50">
+<!-- Mobile Search (Visible only if desktop search isn't enough, or specific table search) -->
+<div class="relative w-full sm:w-64">
+<span class="material-symbols-outlined absolute left-3 top-2 text-on-surface-muted text-[18px] pointer-events-none" data-icon="filter_list">filter_list</span>
+<input class="w-full bg-surface-container border-transparent rounded-lg py-1.5 pl-9 pr-4 text-sm focus:bg-surface focus:border-primary focus:ring-0 transition-colors" placeholder="Filter calls..." type="text">
+</div>
+<!-- Filters -->
+<div class="flex gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
+<button class="px-3 py-1.5 rounded-lg border border-border-subtle bg-surface text-on-surface font-body-sm text-body-sm flex items-center gap-2 hover:bg-surface-container transition-colors whitespace-nowrap">
+<span class="material-symbols-outlined text-[16px]" data-icon="calendar_today">calendar_today</span>
+                                Last 7 Days
+                                <span class="material-symbols-outlined text-[16px]" data-icon="arrow_drop_down">arrow_drop_down</span>
+</button>
+<button class="px-3 py-1.5 rounded-lg border border-border-subtle bg-surface text-on-surface font-body-sm text-body-sm flex items-center gap-2 hover:bg-surface-container transition-colors whitespace-nowrap">
+<span class="material-symbols-outlined text-[16px]" data-icon="language">language</span>
+                                Language: All
+                                <span class="material-symbols-outlined text-[16px]" data-icon="arrow_drop_down">arrow_drop_down</span>
+</button>
+<button class="px-3 py-1.5 rounded-lg border border-border-subtle bg-surface text-on-surface font-body-sm text-body-sm flex items-center gap-2 hover:bg-surface-container transition-colors whitespace-nowrap">
+<span class="material-symbols-outlined text-[16px]" data-icon="assignment">assignment</span>
+                                Status: All
+                                <span class="material-symbols-outlined text-[16px]" data-icon="arrow_drop_down">arrow_drop_down</span>
+</button>
+</div>
+</div>
+<!-- Table Container -->
+<div class="overflow-x-auto flex-1">
+<table class="w-full text-left border-collapse min-w-[800px]">
+<thead>
+<tr class="bg-[#f8fafc] border-b border-border-subtle">
+<th class="py-3 px-4 font-label-mono text-label-mono text-on-surface-muted uppercase sticky top-0 bg-[#f8fafc] z-10">Caller</th>
+<th class="py-3 px-4 font-label-mono text-label-mono text-on-surface-muted uppercase sticky top-0 bg-[#f8fafc] z-10">Time</th>
+<th class="py-3 px-4 font-label-mono text-label-mono text-on-surface-muted uppercase sticky top-0 bg-[#f8fafc] z-10">Duration</th>
+<th class="py-3 px-4 font-label-mono text-label-mono text-on-surface-muted uppercase sticky top-0 bg-[#f8fafc] z-10">Language</th>
+<th class="py-3 px-4 font-label-mono text-label-mono text-on-surface-muted uppercase sticky top-0 bg-[#f8fafc] z-10">Topic</th>
+<th class="py-3 px-4 font-label-mono text-label-mono text-on-surface-muted uppercase sticky top-0 bg-[#f8fafc] z-10">Status</th>
+<th class="py-3 px-4 font-label-mono text-label-mono text-on-surface-muted uppercase sticky top-0 bg-[#f8fafc] z-10 text-right">Action</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md">
+<!-- Row 1 (Selected/Active) -->
+<tr class="border-b border-border-subtle bg-surface-container-low hover:bg-surface-container cursor-pointer transition-colors relative" id="row-selected">
+<td class="py-4 px-4 font-medium text-primary">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-primary absolute left-0"></span>
+                                            +91 98XXX XXXXX
+                                        </div>
+</td>
+<td class="py-4 px-4 text-on-surface-muted">Oct 24, 14:30</td>
+<td class="py-4 px-4 text-on-surface">02:31</td>
+<td class="py-4 px-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-surface-dim text-on-surface-variant">Hinglish</span>
+</td>
+<td class="py-4 px-4 text-on-surface truncate max-w-[150px]">Product Inquiry - Pro Plan</td>
+<td class="py-4 px-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-status-emerald/10 text-[#00714e] border border-status-emerald/20">Completed</span>
+</td>
+<td class="py-4 px-4 text-right">
+<button class="text-on-surface-muted hover:text-primary"><span class="material-symbols-outlined text-[20px]" data-icon="chevron_right">chevron_right</span></button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="border-b border-border-subtle hover:bg-surface-container-lowest cursor-pointer transition-colors">
+<td class="py-4 px-4 font-medium text-on-surface">+1 415 XXX XXXX</td>
+<td class="py-4 px-4 text-on-surface-muted">Oct 24, 14:15</td>
+<td class="py-4 px-4 text-on-surface">04:12</td>
+<td class="py-4 px-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-surface-dim text-on-surface-variant">English</span>
+</td>
+<td class="py-4 px-4 text-on-surface truncate max-w-[150px]">Support - Billing Issue</td>
+<td class="py-4 px-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-status-emerald/10 text-[#00714e] border border-status-emerald/20">Completed</span>
+</td>
+<td class="py-4 px-4 text-right">
+<button class="text-on-surface-muted hover:text-primary"><span class="material-symbols-outlined text-[20px]" data-icon="chevron_right">chevron_right</span></button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="border-b border-border-subtle hover:bg-surface-container-lowest cursor-pointer transition-colors">
+<td class="py-4 px-4 font-medium text-on-surface">+91 99XXX XXXXX</td>
+<td class="py-4 px-4 text-on-surface-muted">Oct 24, 13:50</td>
+<td class="py-4 px-4 text-on-surface">01:45</td>
+<td class="py-4 px-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-surface-dim text-on-surface-variant">Hindi</span>
+</td>
+<td class="py-4 px-4 text-on-surface truncate max-w-[150px]">Callback Request</td>
+<td class="py-4 px-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#ffdad6] text-[#93000a] border border-[#ffdad6]">Missed</span>
+</td>
+<td class="py-4 px-4 text-right">
+<button class="text-on-surface-muted hover:text-primary"><span class="material-symbols-outlined text-[20px]" data-icon="chevron_right">chevron_right</span></button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="border-b border-border-subtle hover:bg-surface-container-lowest cursor-pointer transition-colors">
+<td class="py-4 px-4 font-medium text-on-surface">+44 20 XXXX XXXX</td>
+<td class="py-4 px-4 text-on-surface-muted">Oct 24, 12:30</td>
+<td class="py-4 px-4 text-on-surface">05:20</td>
+<td class="py-4 px-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-surface-dim text-on-surface-variant">English</span>
+</td>
+<td class="py-4 px-4 text-on-surface truncate max-w-[150px]">Feature Inquiry</td>
+<td class="py-4 px-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-surface-container-high text-on-surface border border-outline-variant">Voicemail</span>
+</td>
+<td class="py-4 px-4 text-right">
+<button class="text-on-surface-muted hover:text-primary"><span class="material-symbols-outlined text-[20px]" data-icon="chevron_right">chevron_right</span></button>
+</td>
+</tr>
+<!-- Empty state filler rows could go here if needed, keeping simple for demo -->
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Right Column: Detail Panel (Active State) -->
+<aside class="w-full xl:w-[400px] 2xl:w-[480px] bg-surface rounded-xl border border-border-subtle shadow-[0_12px_32px_rgba(15,23,42,0.06)] flex flex-col h-[calc(100vh-130px)] xl:sticky xl:top-[88px] overflow-hidden shrink-0" style="height: calc(100vh - 110px); min-height: 600px;">
+<!-- Detail Header -->
+<div class="p-6 border-b border-border-subtle bg-[#faf8ff] relative">
+<!-- Decorative background element for premium feel -->
+<div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-full -z-0"></div>
+<div class="relative z-10">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h3 class="font-headline-md text-headline-md font-bold text-on-surface">+91 98XXX XXXXX</h3>
+<p class="font-body-sm text-body-sm text-on-surface-muted mt-1">Oct 24, 2023 • 14:30 IST</p>
+</div>
+<span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-status-emerald/10 text-[#00714e] border border-status-emerald/20">
+                                Completed
+                            </span>
+</div>
+<div class="flex flex-wrap gap-2 mb-6">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-surface text-on-surface border border-border-subtle shadow-sm">
+<span class="material-symbols-outlined text-[14px] text-on-surface-muted" data-icon="timer">timer</span> 02:31
+                            </span>
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-surface text-on-surface border border-border-subtle shadow-sm">
+<span class="material-symbols-outlined text-[14px] text-on-surface-muted" data-icon="translate">translate</span> Hinglish
+                            </span>
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-surface-container-low text-primary border border-primary-fixed shadow-sm">
+<span class="material-symbols-outlined text-[14px]" data-icon="person">person</span> Hot Lead
+                            </span>
+</div>
+<!-- Action Buttons -->
+<div class="flex gap-2">
+<button class="flex-1 bg-primary text-on-primary font-body-sm text-body-sm font-medium py-2 px-3 rounded-lg flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[18px] icon-fill" data-icon="play_circle">play_circle</span>
+                                Play Audio
+                            </button>
+<button class="bg-surface text-on-surface font-body-sm text-body-sm font-medium py-2 px-3 rounded-lg border border-border-subtle flex items-center justify-center gap-2 hover:bg-surface-container transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[18px]" data-icon="download">download</span>
+</button>
+<button class="bg-[#25D366]/10 text-[#075E54] font-body-sm text-body-sm font-medium py-2 px-3 rounded-lg border border-[#25D366]/20 flex items-center justify-center gap-2 hover:bg-[#25D366]/20 transition-colors shadow-sm" title="WhatsApp Follow-up Sent">
+<span class="material-symbols-outlined text-[18px]" data-icon="chat">chat</span>
+<span class="material-symbols-outlined text-[14px] text-status-emerald ml-[-6px]" data-icon="check_circle">check_circle</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Scrollable Content Area -->
+<div class="flex-1 overflow-y-auto p-6 flex flex-col gap-6 min-h-0">
+<!-- AI Summary -->
+<div>
+<h4 class="font-label-mono text-label-mono text-on-surface-muted uppercase mb-3 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]" data-icon="auto_awesome">auto_awesome</span>
+                            AI Summary
+                        </h4>
+<div class="bg-surface-container-low p-4 rounded-lg border border-primary-fixed-dim/30">
+<p class="font-body-sm text-body-sm text-on-surface leading-relaxed">
+                                Caller inquired about upgrading to the Pro Plan. They asked specifically about multi-language support (Hindi/English mixing) and integration limits. The AI successfully explained the pricing and sent a follow-up link via WhatsApp. Lead intent is highly positive.
+                            </p>
+</div>
+</div>
+<!-- Pipeline Status -->
+<div>
+<h4 class="font-label-mono text-label-mono text-on-surface-muted uppercase mb-3 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]" data-icon="memory">memory</span>
+                            Pipeline Telemetry
+                        </h4>
+<div class="flex justify-between items-center bg-surface border border-border-subtle rounded-lg p-3">
+<div class="flex flex-col items-center gap-1">
+<div class="w-6 h-6 rounded-full bg-status-emerald/10 flex items-center justify-center border border-status-emerald/30 text-[#00714e]">
+<span class="material-symbols-outlined text-[14px]" data-icon="check">check</span>
+</div>
+<span class="font-label-mono text-[10px] text-on-surface-muted">VoIP</span>
+</div>
+<div class="w-8 h-[1px] bg-border-subtle"></div>
+<div class="flex flex-col items-center gap-1">
+<div class="w-6 h-6 rounded-full bg-status-emerald/10 flex items-center justify-center border border-status-emerald/30 text-[#00714e]">
+<span class="material-symbols-outlined text-[14px]" data-icon="check">check</span>
+</div>
+<span class="font-label-mono text-[10px] text-on-surface-muted">ASR</span>
+</div>
+<div class="w-8 h-[1px] bg-border-subtle"></div>
+<div class="flex flex-col items-center gap-1">
+<div class="w-6 h-6 rounded-full bg-status-emerald/10 flex items-center justify-center border border-status-emerald/30 text-[#00714e]">
+<span class="material-symbols-outlined text-[14px]" data-icon="check">check</span>
+</div>
+<span class="font-label-mono text-[10px] text-on-surface-muted">Gemini</span>
+</div>
+<div class="w-8 h-[1px] bg-border-subtle"></div>
+<div class="flex flex-col items-center gap-1">
+<div class="w-6 h-6 rounded-full bg-status-emerald/10 flex items-center justify-center border border-status-emerald/30 text-[#00714e]">
+<span class="material-symbols-outlined text-[14px]" data-icon="check">check</span>
+</div>
+<span class="font-label-mono text-[10px] text-on-surface-muted">TTS</span>
+</div>
+</div>
+</div>
+<!-- Transcript -->
+<div class="flex-1 min-h-[250px]">
+<h4 class="font-label-mono text-label-mono text-on-surface-muted uppercase mb-3 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]" data-icon="subtitles">subtitles</span>
+                            Transcript
+                        </h4>
+<div class="space-y-4 font-transcript-text text-transcript-text">
+<!-- AI Bubble -->
+<div class="flex gap-3">
+<div class="w-6 h-6 rounded bg-primary text-on-primary flex items-center justify-center shrink-0 mt-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="smart_toy">smart_toy</span>
+</div>
+<div class="bg-surface-container p-3 rounded-lg rounded-tl-sm text-on-surface">
+                                    Hello! Thank you for calling. How can I help you today?
+                                </div>
+</div>
+<!-- User Bubble -->
+<div class="flex gap-3 flex-row-reverse">
+<div class="w-6 h-6 rounded bg-surface-dim text-on-surface-variant flex items-center justify-center shrink-0 mt-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="person">person</span>
+</div>
+<div class="bg-surface border border-border-subtle p-3 rounded-lg rounded-tr-sm text-on-surface">
+                                    Hi, mujhe Pro plan ke baare mein janna tha. Do you support mixed languages?
+                                </div>
+</div>
+<!-- AI Bubble -->
+<div class="flex gap-3">
+<div class="w-6 h-6 rounded bg-primary text-on-primary flex items-center justify-center shrink-0 mt-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="smart_toy">smart_toy</span>
+</div>
+<div class="bg-surface-container p-3 rounded-lg rounded-tl-sm text-on-surface">
+                                    Haan bilkul! Our AI perfectly understands Hinglish and can switch between languages seamlessly. Pro plan mein aapko unlimited minutes aur priority support milta hai.
+                                </div>
+</div>
+<!-- User Bubble -->
+<div class="flex gap-3 flex-row-reverse">
+<div class="w-6 h-6 rounded bg-surface-dim text-on-surface-variant flex items-center justify-center shrink-0 mt-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="person">person</span>
+</div>
+<div class="bg-surface border border-border-subtle p-3 rounded-lg rounded-tr-sm text-on-surface">
+                                    That sounds great. Can you send me the pricing link?
+                                </div>
+</div>
+<!-- AI Bubble -->
+<div class="flex gap-3">
+<div class="w-6 h-6 rounded bg-primary text-on-primary flex items-center justify-center shrink-0 mt-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="smart_toy">smart_toy</span>
+</div>
+<div class="bg-surface-container p-3 rounded-lg rounded-tl-sm text-on-surface">
+                                    I've just sent a detailed pricing link to your WhatsApp on this number. Let me know if you need help setting it up!
+                                </div>
+</div>
+</div>
+</div>
+</div>
+</aside>
+</main>
+</div>
+<!-- Bottom Navigation (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 w-full bg-surface border-t border-border-subtle flex justify-around items-center h-16 pb-safe z-50">
+<a class="flex flex-col items-center p-2 text-on-surface-muted hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined text-[24px]" data-icon="dashboard">dashboard</span>
+<span class="text-[10px] font-medium mt-1">Dashboard</span>
+</a>
+<a class="flex flex-col items-center p-2 text-primary font-bold transition-colors" href="#">
+<div class="bg-surface-container-low px-4 py-1 rounded-full mb-1">
+<span class="material-symbols-outlined text-[24px] icon-fill" data-icon="history">history</span>
+</div>
+<span class="text-[10px] font-medium">History</span>
+</a>
+<a class="flex flex-col items-center p-2 text-on-surface-muted hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined text-[24px]" data-icon="contact_mail">contact_mail</span>
+<span class="text-[10px] font-medium mt-1">Follow-ups</span>
+</a>
+<a class="flex flex-col items-center p-2 text-on-surface-muted hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined text-[24px]" data-icon="menu">menu</span>
+<span class="text-[10px] font-medium mt-1">More</span>
+</a>
+</nav>
+
+
+</body></html>

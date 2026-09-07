@@ -1,0 +1,358 @@
+<!DOCTYPE html><html class="light" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>CallAgent AI - WhatsApp Follow-ups</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "status-emerald": "#10b981",
+                        "border-subtle": "#e2e8f0",
+                        "on-error-container": "#93000a",
+                        "surface-container-high": "#e2e7ff",
+                        "on-background": "#131b2e",
+                        "surface-dim": "#d2d9f4",
+                        "tertiary-fixed-dim": "#ffb599",
+                        "surface-bright": "#faf8ff",
+                        "on-secondary-fixed-variant": "#005137",
+                        "primary-fixed": "#dbe1ff",
+                        "tertiary-container": "#c04400",
+                        "surface-variant": "#dae2fd",
+                        "error-container": "#ffdad6",
+                        "surface": "#ffffff",
+                        "outline": "#737686",
+                        "secondary-container": "#82f5c1",
+                        "surface-container-low": "#f2f3ff",
+                        "on-surface": "#131b2e",
+                        "primary": "#004ac6",
+                        "tertiary-fixed": "#ffdbce",
+                        "surface-container": "#eaedff",
+                        "on-primary-fixed-variant": "#003ea8",
+                        "secondary": "#006c4a",
+                        "secondary-fixed": "#85f8c4",
+                        "primary-fixed-dim": "#b4c5ff",
+                        "background": "#faf8ff",
+                        "secondary-fixed-dim": "#68dba9",
+                        "on-secondary-fixed": "#002114",
+                        "inverse-on-surface": "#eef0ff",
+                        "surface-container-lowest": "#ffffff",
+                        "error": "#ba1a1a",
+                        "on-primary-container": "#eeefff",
+                        "on-tertiary-fixed": "#370e00",
+                        "primary-container": "#2563eb",
+                        "inverse-primary": "#b4c5ff",
+                        "surface-tint": "#0053db",
+                        "on-tertiary-fixed-variant": "#7f2b00",
+                        "on-surface-variant": "#434655",
+                        "on-error": "#ffffff",
+                        "on-tertiary-container": "#ffede7",
+                        "on-surface-muted": "#64748b",
+                        "surface-container-highest": "#dae2fd",
+                        "tertiary": "#973400",
+                        "on-primary": "#ffffff",
+                        "on-secondary-container": "#00714e",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-fixed": "#00174b",
+                        "inverse-surface": "#283044",
+                        "outline-variant": "#c3c6d7",
+                        "on-secondary": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-gap-lg": "32px",
+                        "stack-gap-sm": "8px",
+                        "container-padding": "24px",
+                        "sidebar-width": "280px",
+                        "stack-gap-md": "16px",
+                        "grid-gutter": "20px"
+                    },
+                    "fontFamily": {
+                        "label-mono": ["JetBrains Mono"],
+                        "body-sm": ["Inter"],
+                        "transcript-text": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "display-metrics": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-mono": ["11px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "transcript-text": ["14px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["18px", { "lineHeight": "28px", "fontWeight": "500" }],
+                        "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "display-metrics": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .shadow-soft { box-shadow: 0px 4px 12px rgba(15, 23, 42, 0.05); }
+    </style>
+</head>
+<body class="bg-background text-on-surface h-screen overflow-hidden flex">
+<!-- SideNavBar -->
+<aside class="hidden md:flex flex-col h-screen fixed left-0 top-0 py-6 bg-surface-container-lowest border-r border-border-subtle w-sidebar-width shrink-0 z-20">
+<div class="px-container-padding mb-stack-gap-lg">
+<div class="flex items-center gap-stack-gap-sm"><img alt="Nemo Agent Logo" class="w-12 h-12 rounded-lg object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1Vpmtf2kKbAjcwbXQnmggj0mPJWY3GbEYBeVZHBKa59uDBzX7eT5XjxSEB0urgCjBABUyfbJHcinyunMs7CyrGx-M4bk8Vjor_xRuEj7f_8kWFzNTG_4Ak06z6pNiYwRlud6QCajg1kM4v2uFbPIBvWjKmCnPGTvdmZ37vTWRdzNSjF9hlVTufLdKjBXZvMQICTh82U6R8hD-DLk8zMm5TTpd7KiyucbuknraK2U9FULMrVm3tjt5lMYIw"><div><h1 class="font-headline-md text-headline-md text-on-surface font-bold">Nemo Agent</h1><p class="font-label-mono text-label-mono text-on-surface-muted">Autonomous Receptionist</p></div></div>
+<button class="mt-stack-gap-md w-full bg-primary-container text-on-primary font-body-md text-body-md py-2 rounded-DEFAULT font-medium hover:opacity-90 transition-opacity">
+                New Campaign
+            </button>
+</div>
+<nav class="flex-1 overflow-y-auto px-4 space-y-1">
+<a class="flex items-center gap-stack-gap-md px-4 py-3 cursor-pointer text-on-surface-variant hover:bg-surface-container transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-mono text-label-mono uppercase">Dashboard</span>
+</a>
+<a class="flex items-center gap-stack-gap-md px-4 py-3 cursor-pointer text-on-surface-variant hover:bg-surface-container transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">ring_volume</span>
+<span class="font-label-mono text-label-mono uppercase">Live Calls</span>
+</a>
+<a class="flex items-center gap-stack-gap-md px-4 py-3 cursor-pointer text-on-surface-variant hover:bg-surface-container transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">history</span>
+<span class="font-label-mono text-label-mono uppercase">Call History</span>
+</a>
+<a class="flex items-center gap-stack-gap-md px-4 py-3 cursor-pointer bg-secondary-container text-on-secondary-container rounded-lg font-bold transition-all" href="#">
+<span class="material-symbols-outlined">find_replace</span>
+<span class="font-label-mono text-label-mono uppercase">Follow-ups</span>
+</a>
+<a class="flex items-center gap-stack-gap-md px-4 py-3 cursor-pointer text-on-surface-variant hover:bg-surface-container transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">dns</span>
+<span class="font-label-mono text-label-mono uppercase">System Status</span>
+</a>
+<a class="flex items-center gap-stack-gap-md px-4 py-3 cursor-pointer text-on-surface-variant hover:bg-surface-container transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">menu_book</span>
+<span class="font-label-mono text-label-mono uppercase">Knowledge Base</span>
+</a>
+</nav>
+<div class="px-4 pt-4 border-t border-border-subtle mt-auto space-y-1">
+<a class="flex items-center gap-stack-gap-md px-4 py-3 cursor-pointer text-on-surface-variant hover:bg-surface-container transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-mono text-label-mono uppercase">Settings</span>
+</a>
+<a class="flex items-center gap-stack-gap-md px-4 py-3 cursor-pointer text-on-surface-variant hover:bg-surface-container transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-label-mono text-label-mono uppercase">Support</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-sidebar-width flex flex-col h-screen overflow-hidden">
+<!-- TopNavBar (Mobile Only) -->
+<header class="md:hidden flex justify-between items-center w-full px-container-padding h-16 bg-surface border-b border-border-subtle shrink-0">
+<div class="flex items-center gap-2">
+<img alt="Nemo Agent Logo" class="w-16 h-16 rounded-lg object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1Vpmtf2kKbAjcwbXQnmggj0mPJWY3GbEYBeVZHBKa59uDBzX7eT5XjxSEB0urgCjBABUyfbJHcinyunMs7CyrGx-M4bk8Vjor_xRuEj7f_8kWFzNTG_4Ak06z6pNiYwRlud6QCajg1kM4v2uFbPIBvWjKmCnPGTvdmZ37vTWRdzNSjF9hlVTufLdKjBXZvMQICTh82U6R8hD-DLk8zMm5TTpd7KiyucbuknraK2U9FULMrVm3tjt5lMYIw">
+<span class="font-headline-lg text-headline-lg font-bold text-primary">Nemo Agent</span>
+</div>
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer">notifications</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer">account_circle</span>
+</div>
+</header>
+<div class="flex-1 overflow-y-auto p-container-padding md:p-[24px]">
+<!-- Metrics Row -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-grid-gutter mb-stack-gap-lg">
+<div class="bg-surface border border-border-subtle rounded-lg p-stack-gap-md shadow-soft">
+<h3 class="font-label-mono text-label-mono text-on-surface-muted uppercase mb-2">Follow-ups Sent</h3>
+<div class="flex items-end gap-2">
+<span class="font-display-metrics text-display-metrics text-on-surface">18</span>
+<span class="font-body-sm text-body-sm text-status-emerald mb-1 flex items-center"><span class="material-symbols-outlined text-sm">trending_up</span> Today</span>
+</div>
+</div>
+<div class="bg-surface border border-border-subtle rounded-lg p-stack-gap-md shadow-soft">
+<h3 class="font-label-mono text-label-mono text-on-surface-muted uppercase mb-2">Active Replies</h3>
+<div class="flex items-end gap-2">
+<span class="font-display-metrics text-display-metrics text-on-surface">11</span>
+<span class="font-body-sm text-body-sm text-status-emerald mb-1 flex items-center"><span class="material-symbols-outlined text-sm">trending_up</span> 61% response</span>
+</div>
+</div>
+<div class="bg-surface border border-border-subtle rounded-lg p-stack-gap-md shadow-soft">
+<h3 class="font-label-mono text-label-mono text-on-surface-muted uppercase mb-2">Converted to Lead</h3>
+<div class="flex items-end gap-2">
+<span class="font-display-metrics text-display-metrics text-on-surface">4</span>
+<span class="font-body-sm text-body-sm text-on-surface-muted mb-1">Pending review</span>
+</div>
+</div>
+</div>
+<!-- Main Workspace -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-grid-gutter h-[calc(100vh-220px)] min-h-[600px]">
+<!-- Left Column: Context & Timeline -->
+<div class="lg:col-span-4 flex flex-col gap-grid-gutter h-full overflow-y-auto pr-2">
+<!-- Customer Overview -->
+<div class="bg-surface border border-border-subtle rounded-lg p-stack-gap-md shadow-soft shrink-0">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Customer Profile</h2>
+<p class="font-body-sm text-body-sm text-on-surface-muted mt-1">+91 98XXX XXXXX</p>
+</div>
+<span class="bg-secondary-container/20 text-on-secondary-container px-2 py-1 rounded font-label-mono text-[10px] uppercase border border-secondary-container">Active Lead</span>
+</div>
+<div class="space-y-4">
+<div>
+<h4 class="font-label-mono text-label-mono text-on-surface-muted uppercase mb-1">Primary Intent</h4>
+<p class="font-body-md text-body-md text-on-surface bg-surface-container rounded p-2 border border-surface-dim">Sofa inquiry context - Interested in 3-seater luxury models, budget around ₹35k.</p>
+</div>
+<div>
+<h4 class="font-label-mono text-label-mono text-on-surface-muted uppercase mb-2">Journey Steps</h4>
+<div class="flex items-center gap-2">
+<div class="flex items-center gap-1 bg-surface-container-low px-2 py-1 rounded border border-border-subtle">
+<span class="material-symbols-outlined text-sm text-primary">call</span>
+<span class="font-body-sm text-body-sm text-on-surface">Call</span>
+</div>
+<span class="material-symbols-outlined text-border-subtle text-sm">arrow_forward</span>
+<div class="flex items-center gap-1 bg-surface-container-low px-2 py-1 rounded border border-border-subtle">
+<span class="material-symbols-outlined text-sm text-primary">summarize</span>
+<span class="font-body-sm text-body-sm text-on-surface">Summary</span>
+</div>
+<span class="material-symbols-outlined text-border-subtle text-sm">arrow_forward</span>
+<div class="flex items-center gap-1 bg-primary/10 px-2 py-1 rounded border border-primary/20">
+<span class="material-symbols-outlined text-sm text-status-emerald">chat</span>
+<span class="font-body-sm text-body-sm text-status-emerald font-medium">WA</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Activity Timeline -->
+<div class="bg-surface border border-border-subtle rounded-lg p-stack-gap-md shadow-soft flex-1 flex flex-col">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-4">Activity Timeline</h2>
+<div class="relative pl-6 space-y-6 flex-1 overflow-y-auto">
+<!-- Timeline Line -->
+<div class="absolute left-[11px] top-2 bottom-2 w-px bg-border-subtle"></div>
+<!-- Item 1 -->
+<div class="relative">
+<div class="absolute -left-[30px] bg-surface rounded-full border-2 border-border-subtle w-6 h-6 flex items-center justify-center">
+<span class="material-symbols-outlined text-[12px] text-on-surface-muted">phone_disabled</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface font-medium">Phone Call Ended</p>
+<p class="font-body-sm text-body-sm text-on-surface-muted">Today, 10:45 AM (Dur: 3m 12s)</p>
+</div>
+<!-- Item 2 -->
+<div class="relative">
+<div class="absolute -left-[30px] bg-surface rounded-full border-2 border-border-subtle w-6 h-6 flex items-center justify-center">
+<span class="material-symbols-outlined text-[12px] text-primary">smart_toy</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface font-medium">AI Follow-up Sent</p>
+<p class="font-body-sm text-body-sm text-on-surface-muted">Today, 10:48 AM via WhatsApp</p>
+</div>
+<!-- Item 3 -->
+<div class="relative">
+<div class="absolute -left-[30px] bg-status-emerald/10 rounded-full border-2 border-status-emerald w-6 h-6 flex items-center justify-center">
+<span class="material-symbols-outlined text-[12px] text-status-emerald">chat_bubble</span>
+</div>
+<p class="font-body-md text-body-md text-status-emerald font-medium">WhatsApp Conversation Active</p>
+<p class="font-body-sm text-body-sm text-on-surface-muted">Ongoing since 11:02 AM</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: WhatsApp View -->
+<div class="lg:col-span-8 bg-[#EFEAE2] border border-border-subtle rounded-lg shadow-soft flex flex-col overflow-hidden h-full">
+<!-- WA Header -->
+<div class="bg-surface px-4 py-3 border-b border-border-subtle flex items-center justify-between shrink-0">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center border border-border-subtle">
+<span class="material-symbols-outlined text-on-surface-muted">person</span>
+</div>
+<div>
+<h3 class="font-body-md text-body-md text-on-surface font-semibold">+91 98XXX XXXXX</h3>
+<p class="font-body-sm text-body-sm text-status-emerald flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-status-emerald"></span> Online
+                                </p>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="p-2 text-on-surface-muted hover:bg-surface-container rounded-full transition-colors">
+<span class="material-symbols-outlined">search</span>
+</button>
+<button class="p-2 text-on-surface-muted hover:bg-surface-container rounded-full transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Chat Area -->
+<div class="flex-1 overflow-y-auto p-4 space-y-4" style="background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23000000\' fill-opacity=\'0.03\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');">
+<!-- AI Message (Initial) -->
+<div class="flex justify-start">
+<div class="bg-surface rounded-lg rounded-tl-none p-3 max-w-[80%] shadow-sm border border-border-subtle">
+<p class="font-transcript-text text-transcript-text text-on-surface">Hi there! This is Nemo Agent following up on your inquiry earlier today about our 3-seater luxury sofas. As promised, I'm here to provide pricing and options. How can I assist you further?</p>
+<p class="font-label-mono text-[10px] text-on-surface-muted mt-1 text-right">10:48 AM</p>
+</div>
+</div>
+<!-- User Message -->
+<div class="flex justify-end">
+<div class="bg-[#dcf8c6] rounded-lg rounded-tr-none p-3 max-w-[80%] shadow-sm border border-[#c3e6aa]">
+<p class="font-transcript-text text-transcript-text text-on-surface">Hi, yes. What is the price for the velvet finish one we talked about? And do you have photos?</p>
+<p class="font-label-mono text-[10px] text-on-surface-muted mt-1 text-right flex items-center justify-end gap-1">11:02 AM <span class="material-symbols-outlined text-[14px] text-primary">done_all</span></p>
+</div>
+</div>
+<!-- AI Message (Response + Catalog) -->
+<div class="flex justify-start">
+<div class="bg-surface rounded-lg rounded-tl-none p-3 max-w-[85%] shadow-sm border border-border-subtle">
+<p class="font-transcript-text text-transcript-text text-on-surface mb-3">Certainly! The 'Lumina' 3-seater in Premium Velvet is currently priced at ₹32,999 (including taxes). We have it available in Navy Blue and Emerald Green. Here are the catalog details:</p>
+<!-- Product Cards Container -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-2">
+<!-- Card 1 -->
+<div class="border border-border-subtle rounded bg-surface overflow-hidden">
+<div class="w-full h-32 bg-cover bg-center bg-surface-container" data-alt="A modern, luxurious 3-seater velvet sofa in deep navy blue, placed in a bright, minimalist living room setting with soft natural lighting and light wooden floors. Professional interior design photography." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuByxIhs0xOpj4C9DdSZn6Ka5kjo_x1m29ugccprVOXMW0Mdr_Tn7Pnsc7eaWsmw1yh8XR5TrAOLh58MNubmvD9DBQpMluO3sZEWtXLyMXjsrL_dVJzhBEA2v87RFOLRCqmGKunl66-rjvtsEJE4WRA7v-vLKIgvSCtlZLIPgwE9BkVVdPyLblBk0MbaOOKY0D2mBjiXSxTTzj6Hh-A_k0yyVs1fl5UqCiU2jsWVBZy2hTS5pzslcf2r')"></div>
+<div class="p-2">
+<h4 class="font-body-md text-body-md font-medium text-on-surface">Lumina - Navy Blue</h4>
+<p class="font-body-sm text-body-sm text-on-surface-muted mb-2">Premium Velvet</p>
+<div class="flex justify-between items-center">
+<span class="font-headline-md text-headline-md text-primary font-bold">₹32,999</span>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="border border-border-subtle rounded bg-surface overflow-hidden">
+<div class="w-full h-32 bg-cover bg-center bg-surface-container" data-alt="A modern, luxurious 3-seater velvet sofa in rich emerald green, positioned in a well-lit, contemporary light-mode studio setup against a pristine white wall. High resolution product photography." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCBBedvgJQ1lUP1u2A-K8SBFhEl09qa8ni9dMZbmHKJijkieVeyAjuaI5pCN9LOgIIv0lzKP1HAGU9JxG9RXp9mizonb8txY3XH05IoIPJHmKwEvYx7-KDNbloZu9FsOivEUtxSYDen4bQKxnxMi51wVYEAR8yOWiqQdldtIy22RSW2kTFqBLaAjKZb7YA49RDZN3xki5bZ5OXPSCKZqspy0dO8jayYrU2_DyHJvLc4I2qa_yzuII6I')"></div>
+<div class="p-2">
+<h4 class="font-body-md text-body-md font-medium text-on-surface">Lumina - Emerald</h4>
+<p class="font-body-sm text-body-sm text-on-surface-muted mb-2">Premium Velvet</p>
+<div class="flex justify-between items-center">
+<span class="font-headline-md text-headline-md text-primary font-bold">₹32,999</span>
+</div>
+</div>
+</div>
+</div>
+<p class="font-label-mono text-[10px] text-on-surface-muted mt-1 text-right">11:03 AM</p>
+</div>
+</div>
+</div>
+<!-- Input Area -->
+<div class="bg-surface p-3 border-t border-border-subtle flex items-center gap-3 shrink-0">
+<button class="p-2 text-on-surface-muted hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined">add</span>
+</button>
+<div class="flex-1 bg-surface-container rounded-full px-4 py-2 border border-border-subtle flex items-center focus-within:bg-white focus-within:border-primary transition-colors">
+<input class="w-full bg-transparent border-none focus:ring-0 font-body-md text-body-md text-on-surface-muted placeholder-on-surface-muted/50 cursor-not-allowed" disabled="" placeholder="AI is managing this conversation..." type="text">
+</div>
+<button class="w-10 h-10 bg-primary text-on-primary rounded-full flex items-center justify-center opacity-50 cursor-not-allowed">
+<span class="material-symbols-outlined">send</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+
+
+
+
+</body></html>

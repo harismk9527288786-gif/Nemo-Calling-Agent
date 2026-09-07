@@ -1,0 +1,508 @@
+<!DOCTYPE html><html class="light" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>System Status - Nemo Agent</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "error-container": "#ffdad6",
+                      "on-secondary-fixed-variant": "#005137",
+                      "background": "#faf8ff",
+                      "on-tertiary-fixed-variant": "#7f2b00",
+                      "surface-dim": "#f8fafc",
+                      "secondary": "#006c4a",
+                      "surface-container-low": "#f2f3ff",
+                      "on-primary": "#ffffff",
+                      "outline-variant": "#c3c6d7",
+                      "on-primary-container": "#eeefff",
+                      "surface-container": "#eaedff",
+                      "primary-container": "#2563eb",
+                      "primary-fixed": "#dbe1ff",
+                      "tertiary-container": "#c04400",
+                      "tertiary": "#973400",
+                      "on-tertiary": "#ffffff",
+                      "on-error-container": "#93000a",
+                      "outline": "#737686",
+                      "surface-variant": "#dae2fd",
+                      "on-primary-fixed": "#00174b",
+                      "on-background": "#131b2e",
+                      "on-error": "#ffffff",
+                      "on-secondary-fixed": "#002114",
+                      "on-surface-variant": "#434655",
+                      "inverse-on-surface": "#eef0ff",
+                      "surface-tint": "#0053db",
+                      "surface-container-lowest": "#ffffff",
+                      "on-secondary-container": "#00714e",
+                      "tertiary-fixed-dim": "#ffb599",
+                      "status-emerald": "#10b981",
+                      "secondary-fixed": "#85f8c4",
+                      "border-subtle": "#e2e8f0",
+                      "surface-bright": "#faf8ff",
+                      "inverse-primary": "#b4c5ff",
+                      "on-surface-muted": "#64748b",
+                      "primary": "#004ac6",
+                      "inverse-surface": "#283044",
+                      "tertiary-fixed": "#ffdbce",
+                      "surface-container-highest": "#dae2fd",
+                      "on-surface": "#131b2e",
+                      "surface-container-high": "#e2e7ff",
+                      "primary-fixed-dim": "#b4c5ff",
+                      "on-tertiary-container": "#ffede7",
+                      "error": "#ba1a1a",
+                      "on-primary-fixed-variant": "#003ea8",
+                      "on-tertiary-fixed": "#370e00",
+                      "on-secondary": "#ffffff",
+                      "secondary-container": "#82f5c1",
+                      "secondary-fixed-dim": "#68dba9",
+                      "surface": "#ffffff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "stack-gap-lg": "32px",
+                      "stack-gap-sm": "8px",
+                      "container-padding": "24px",
+                      "sidebar-width": "280px",
+                      "grid-gutter": "20px",
+                      "stack-gap-md": "16px"
+              },
+              "fontFamily": {
+                      "display-metrics": [
+                              "Inter"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "label-mono": [
+                              "JetBrains Mono"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ],
+                      "transcript-text": [
+                              "Inter"
+                      ],
+                      "headline-lg": [
+                              "Inter"
+                      ],
+                      "body-sm": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "display-metrics": [
+                              "36px",
+                              {
+                                      "lineHeight": "44px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-mono": [
+                              "11px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-md": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "transcript-text": [
+                              "14px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "18px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col md:flex-row antialiased selection:bg-primary-container selection:text-on-primary-container">
+<!-- Top Navigation (Mobile Only) -->
+<header class="md:hidden flex justify-between items-center w-full px-container-padding h-16 bg-surface border-b border-border-subtle z-50 sticky top-0">
+<div class="flex items-center gap-2">
+<span class="font-headline-lg text-headline-lg font-bold text-primary">CallAgent AI</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-muted cursor-pointer" data-icon="notifications">notifications</span>
+<img alt="User profile" class="w-8 h-8 rounded-full object-cover border border-border-subtle" data-alt="A small, circular avatar portrait of a professional corporate assistant or AI representative in a minimalist setting. Bright lighting, clean white background, conveying approachability and efficiency." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBchj7fadDcSDQxxJSzoGsphTW4lS_64PenvlWjxYiY9n1DxHeSgZ8PfRzN-sF28fhduC1u7ApYKoh2SfWNR9obqK_VsdcbEF5kgSUQN_obx4e1CRISxD1XwUnv-c2aiczUe0O1mHupQ6I2z6lRJlZDPVu9pNcZWvGwXsCOD6R5SKXJVfgMuWz1qLIedhboQ8dFVb3DT_19lVW61XXJwOZMV9cQpMYFSgPZz8WMgjXB-LApGwVuE_Hx">
+</div>
+</header>
+<!-- Side Navigation (Web Only) -->
+<nav class="hidden md:flex flex-col h-screen fixed left-0 top-0 py-6 bg-surface-container-lowest border-r border-border-subtle w-sidebar-width z-40">
+<div class="px-6 mb-8 flex flex-col gap-1"><div class="flex items-center gap-3 mb-2">
+<div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm overflow-hidden flex-shrink-0 bg-inverse-surface"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDBuLzO6-eueXa2LCh2qECfNK4rpBOLgPNDnzHS-46ZWL7wkiAxsHt2beho-m_03o45a-jBc_yArXZhOoNS_e3EiW1yhjLJLSSGZ2Vv60gKbt6Ple2hZhYPzpk9aFRh2hykmVzmAC9-UcB53y20LnpKke72yS2EAUI0hG6Wn0dEvbXcKQXo8ioYyScDQ1OgdXj4DrDb8JI7R6zTMf-ykQYjH_USH8y3y_-oZo-Sah98C8SYDlsqUlj334LAwP8NI9eW8w" alt="Nemo Agent Logo" class="w-full h-full object-cover"></div>
+<h1 class="font-headline-md text-headline-md text-on-surface font-bold tracking-tight">Nemo Agent</h1>
+</div>
+<p class="font-label-mono text-label-mono uppercase text-on-surface-muted">Autonomous Receptionist</p></div>
+<div class="px-4 mb-6">
+<button class="w-full bg-primary-container text-on-primary py-2.5 rounded-lg font-body-md text-body-md font-medium hover:bg-primary transition-colors shadow-sm flex items-center justify-center gap-2">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+                New Campaign
+            </button>
+</div>
+<ul class="flex flex-col gap-1 px-4 flex-grow overflow-y-auto">
+<li class="">
+<a class="flex items-center gap-stack-gap-md px-4 py-3 cursor-pointer text-on-surface-variant hover:bg-surface-container transition-all rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors" data-icon="dashboard">dashboard</span>
+<span class="font-label-mono text-label-mono uppercase">Dashboard</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-stack-gap-md px-4 py-3 cursor-pointer text-on-surface-variant hover:bg-surface-container transition-all rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors" data-icon="ring_volume">ring_volume</span>
+<span class="font-label-mono text-label-mono uppercase">Live Calls</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-stack-gap-md px-4 py-3 cursor-pointer text-on-surface-variant hover:bg-surface-container transition-all rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors" data-icon="history">history</span>
+<span class="font-label-mono text-label-mono uppercase">Call History</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-stack-gap-md px-4 py-3 cursor-pointer text-on-surface-variant hover:bg-surface-container transition-all rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors" data-icon="quick_reply">find_replace</span>
+<span class="font-label-mono text-label-mono uppercase">Follow-ups</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-stack-gap-md px-4 py-3 cursor-pointer bg-secondary-container text-on-secondary-container rounded-lg font-bold shadow-[0px_4px_12px_rgba(15,23,42,0.05)] border border-secondary-fixed-dim/30" href="#">
+<span class="material-symbols-outlined" data-icon="dns" data-weight="fill" style="font-variation-settings: &quot;FILL&quot; 1;">dns</span>
+<span class="font-label-mono text-label-mono uppercase">System Status</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-stack-gap-md px-4 py-3 cursor-pointer text-on-surface-variant hover:bg-surface-container transition-all rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors" data-icon="menu_book">menu_book</span>
+<span class="font-label-mono text-label-mono uppercase">Knowledge Base</span>
+</a>
+</li>
+</ul>
+<div class="mt-auto px-4 pt-4 border-t border-border-subtle">
+<ul class="flex flex-col gap-1">
+<li class="">
+<a class="flex items-center gap-stack-gap-md px-4 py-3 cursor-pointer text-on-surface-variant hover:bg-surface-container transition-all rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors" data-icon="settings">settings</span>
+<span class="font-label-mono text-label-mono uppercase">Settings</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-stack-gap-md px-4 py-3 cursor-pointer text-on-surface-variant hover:bg-surface-container transition-all rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors" data-icon="help">help</span>
+<span class="font-label-mono text-label-mono uppercase">Support</span>
+</a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-grow md:ml-[280px] p-container-padding max-w-7xl mx-auto w-full pb-24 md:pb-8">
+<!-- Header -->
+<header class="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 mb-stack-gap-lg pb-4 border-b border-border-subtle"><div class="flex items-center gap-3"><div><div class="flex items-center gap-2.5"><h2 class="font-headline-lg text-headline-lg font-semibold text-on-surface tracking-tight">System Status</h2><span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-status-emerald/10 text-status-emerald border border-status-emerald/20 text-label-mono font-medium"><span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-status-emerald opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-status-emerald"></span></span>SYSTEM OPTIMAL</span></div><p class="font-body-sm text-body-sm text-on-surface-muted mt-0.5">Real-time metrics for Nemo Agent infrastructure &amp; runtime health</p></div></div><div class="flex-1 max-w-md mx-auto w-full hidden md:block"><div class="relative"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-muted text-[18px]">search</span><input type="text" placeholder="Search nodes, services, logs..." class="w-full pl-9 pr-4 py-2 bg-surface-container-lowest border border-border-subtle rounded-lg text-body-sm text-on-surface placeholder:text-on-surface-muted focus:outline-none focus:ring-2 focus:ring-primary-container/20 focus:border-primary-container transition-all shadow-sm"></div></div><div class="flex items-center justify-end gap-3"><div class="flex items-center gap-1"><button class="relative p-2 text-on-surface-muted hover:text-on-surface hover:bg-surface-container rounded-lg transition-colors" title="Notifications"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-primary-container"></span></button><button class="p-2 text-on-surface-muted hover:text-on-surface hover:bg-surface-container rounded-lg transition-colors" title="Support &amp; Help"><span class="material-symbols-outlined text-[20px]">help_outline</span></button></div><div class="h-6 w-px bg-border-subtle mx-1 hidden sm:block"></div><div class="flex items-center gap-2.5 pl-1 cursor-pointer group"><img alt="Sarah Jenkins" class="w-9 h-9 rounded-full object-cover border border-border-subtle shadow-sm group-hover:ring-2 group-hover:ring-primary-container/30 transition-all" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBchj7fadDcSDQxxJSzoGsphTW4lS_64PenvlWjxYiY9n1DxHeSgZ8PfRzN-sF28fhduC1u7ApYKoh2SfWNR9obqK_VsdcbEF5kgSUQN_obx4e1CRISxD1XwUnv-c2aiczUe0O1mHupQ6I2z6lRJlZDPVu9pNcZWvGwXsCOD6R5SKXJVfgMuWz1qLIedhboQ8dFVb3DT_19lVW61XXJwOZMV9cQpMYFSgPZz8WMgjXB-LApGwVuE_Hx"><div class="hidden lg:flex flex-col text-left"><span class="text-body-sm font-semibold text-on-surface leading-tight group-hover:text-primary transition-colors">Sarah Jenkins</span><span class="text-label-mono text-on-surface-muted">Admin / Lead Ops</span></div></div></div></header>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-grid-gutter">
+<!-- Core Services Status Cards (Top Row) -->
+<div class="md:col-span-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-grid-gutter">
+<!-- Internet -->
+<div class="bg-surface-container-lowest rounded-xl border border-border-subtle p-5 hover:shadow-[0px_4px_12px_rgba(15,23,42,0.05)] transition-shadow">
+<div class="flex justify-between items-start mb-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined" data-icon="public">public</span>
+</div>
+<span class="bg-status-emerald/10 text-status-emerald px-2 py-1 rounded text-[10px] font-bold tracking-wider uppercase">Optimal</span>
+</div>
+<h3 class="font-label-mono text-label-mono uppercase text-on-surface-muted mb-1">Internet Connection</h3>
+<p class="font-headline-md text-headline-md text-on-surface font-semibold">1.2 Gbps</p>
+</div>
+<!-- VoIP -->
+<div class="bg-surface-container-lowest rounded-xl border border-border-subtle p-5 hover:shadow-[0px_4px_12px_rgba(15,23,42,0.05)] transition-shadow">
+<div class="flex justify-between items-start mb-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined" data-icon="router">router</span>
+</div>
+<span class="bg-status-emerald/10 text-status-emerald px-2 py-1 rounded text-[10px] font-bold tracking-wider uppercase">Stable</span>
+</div>
+<h3 class="font-label-mono text-label-mono uppercase text-on-surface-muted mb-1">VoIP Gateway</h3>
+<p class="font-headline-md text-headline-md text-on-surface font-semibold">14ms Latency</p>
+</div>
+<!-- ASR Nodes -->
+<div class="bg-surface-container-lowest rounded-xl border border-border-subtle p-5 hover:shadow-[0px_4px_12px_rgba(15,23,42,0.05)] transition-shadow">
+<div class="flex justify-between items-start mb-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined" data-icon="record_voice_over">record_voice_over</span>
+</div>
+<span class="bg-status-emerald/10 text-status-emerald px-2 py-1 rounded text-[10px] font-bold tracking-wider uppercase">3/3 Running</span>
+</div>
+<h3 class="font-label-mono text-label-mono uppercase text-on-surface-muted mb-1">ASR Nodes</h3>
+<p class="font-headline-md text-headline-md text-on-surface font-semibold">100% Capacity</p>
+</div>
+<!-- Gemini API -->
+<div class="bg-surface-container-lowest rounded-xl border border-border-subtle p-5 hover:shadow-[0px_4px_12px_rgba(15,23,42,0.05)] transition-shadow">
+<div class="flex justify-between items-start mb-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined" data-icon="memory">memory</span>
+</div>
+<span class="bg-status-emerald/10 text-status-emerald px-2 py-1 rounded text-[10px] font-bold tracking-wider uppercase">Active</span>
+</div>
+<h3 class="font-label-mono text-label-mono uppercase text-on-surface-muted mb-1">Gemini API</h3>
+<p class="font-headline-md text-headline-md text-on-surface font-semibold">120 Req/s</p>
+</div>
+<!-- TTS Engine -->
+<div class="bg-surface-container-lowest rounded-xl border border-border-subtle p-5 hover:shadow-[0px_4px_12px_rgba(15,23,42,0.05)] transition-shadow">
+<div class="flex justify-between items-start mb-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined" data-icon="speaker_notes">speaker_notes</span>
+</div>
+<span class="bg-status-emerald/10 text-status-emerald px-2 py-1 rounded text-[10px] font-bold tracking-wider uppercase">Ready</span>
+</div>
+<h3 class="font-label-mono text-label-mono uppercase text-on-surface-muted mb-1">TTS Engine</h3>
+<p class="font-headline-md text-headline-md text-on-surface font-semibold">Sub-200ms</p>
+</div>
+</div>
+<!-- Resource Usage Section -->
+<div class="md:col-span-8 bg-surface-container-lowest rounded-xl border border-border-subtle p-6 shadow-[0px_4px_12px_rgba(15,23,42,0.05)] relative overflow-hidden">
+<div class="flex justify-between items-center mb-6 relative z-10">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface font-semibold">Compute Resources</h3>
+<p class="font-body-sm text-body-sm text-on-surface-muted">Real-time CPU and Memory allocation</p>
+</div>
+<button class="text-primary hover:text-primary-container transition-colors p-2 rounded-full hover:bg-surface-container">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
+<!-- CPU Usage -->
+<div class="space-y-4">
+<div class="flex justify-between items-end">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container" data-icon="developer_board">developer_board</span>
+<span class="font-label-mono text-label-mono uppercase font-bold text-on-surface">CPU Core Usage</span>
+</div>
+<span class="font-display-metrics text-[28px] font-semibold text-on-surface leading-none">78<span class="text-headline-md text-on-surface-muted">%</span></span>
+</div>
+<!-- Custom CSS Graph Representation -->
+<div class="h-24 w-full flex items-end gap-1 pb-1 border-b border-border-subtle">
+<div class="w-full bg-surface-container-highest rounded-t-sm h-[40%] hover:h-[45%] transition-all"></div>
+<div class="w-full bg-surface-container-highest rounded-t-sm h-[45%] hover:h-[50%] transition-all"></div>
+<div class="w-full bg-surface-container-highest rounded-t-sm h-[60%] hover:h-[65%] transition-all"></div>
+<div class="w-full bg-primary-container rounded-t-sm h-[78%] relative group">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-inverse-surface text-inverse-on-surface px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20">78% Current</div>
+</div>
+<div class="w-full bg-surface-container-highest rounded-t-sm h-[70%] hover:h-[75%] transition-all"></div>
+<div class="w-full bg-surface-container-highest rounded-t-sm h-[55%] hover:h-[60%] transition-all"></div>
+<div class="w-full bg-surface-container-highest rounded-t-sm h-[65%] hover:h-[70%] transition-all"></div>
+<div class="w-full bg-surface-container-highest rounded-t-sm h-[80%] hover:h-[85%] transition-all"></div>
+<div class="w-full bg-surface-container-highest rounded-t-sm h-[72%] hover:h-[77%] transition-all"></div>
+<div class="w-full bg-surface-container-highest rounded-t-sm h-[60%] hover:h-[65%] transition-all"></div>
+</div>
+<div class="flex justify-between font-label-mono text-label-mono text-on-surface-muted">
+<span class="">-10m</span>
+<span class="">Now</span>
+</div>
+</div>
+<!-- Memory Usage -->
+<div class="space-y-4">
+<div class="flex justify-between items-end">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary-container" data-icon="dns">dns</span>
+<span class="font-label-mono text-label-mono uppercase font-bold text-on-surface">Memory Allocation</span>
+</div>
+<span class="font-display-metrics text-[28px] font-semibold text-on-surface leading-none">5.2<span class="text-headline-md text-on-surface-muted"> / 8 GB</span></span>
+</div>
+<!-- Progress Bar Style -->
+<div class="pt-6 pb-4">
+<div class="w-full h-4 bg-surface-container rounded-full overflow-hidden flex">
+<div class="h-full bg-secondary-container w-[65%] relative">
+<div class="absolute inset-0 bg-white/20 animate-pulse"></div>
+</div>
+</div>
+<div class="flex justify-between font-label-mono text-label-mono text-on-surface-muted mt-2">
+<span class="">0 GB</span>
+<span class="text-on-surface font-bold">65% Utilized</span>
+<span class="">8 GB</span>
+</div>
+</div>
+<ul class="space-y-2 mt-4 font-body-sm text-body-sm">
+<li class="flex justify-between">
+<span class="text-on-surface-muted flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-secondary-container"></span> JVM Heap</span>
+<span class="font-medium text-on-surface">3.1 GB</span>
+</li>
+<li class="flex justify-between">
+<span class="text-on-surface-muted flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-primary-container"></span> Cache</span>
+<span class="font-medium text-on-surface">1.8 GB</span>
+</li>
+<li class="flex justify-between">
+<span class="text-on-surface-muted flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-surface-variant"></span> System</span>
+<span class="font-medium text-on-surface">0.3 GB</span>
+</li>
+</ul>
+</div>
+</div>
+<!-- Subtle background decoration -->
+<div class="absolute -right-20 -bottom-20 w-64 h-64 bg-primary-fixed/30 rounded-full blur-3xl pointer-events-none"></div>
+</div>
+<!-- Network Topology/Map (Side Panel) -->
+<div class="md:col-span-4 bg-surface-container-lowest rounded-xl border border-border-subtle p-6 flex flex-col h-full shadow-[0px_4px_12px_rgba(15,23,42,0.05)]">
+<div class="flex justify-between items-center mb-6">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface font-semibold">Active Regions</h3>
+<p class="font-body-sm text-body-sm text-on-surface-muted">Node distribution</p>
+</div>
+</div>
+<div class="flex-grow rounded-lg overflow-hidden border border-border-subtle relative min-h-[200px] mb-4">
+<div class="absolute inset-0 bg-surface-dim z-0">
+<img alt="Server Map" class="w-full h-full object-cover opacity-80" data-alt="A sleek, minimalist vector map of the world or North America in a light mode UI aesthetic. White and light grey tones, with sharp geometric precision. Glowing emerald green dots indicating active server nodes. Clean, corporate, high-tech dashboard style." data-location="North America" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMdun184Gzl_eSYUsCM7Iao0TO7pdPQYDzp5rvJ1F3HHDgHX0HMcfGNVP0MCcc7qHAm9arBd79-_u4uZdrx3xTXP52X3OGa0fjMLbo5nFR5ThvlDtMtQL0OafOyq4hePp2Xixr_wpiTbu7Cz5uFceAIPhe-jiQ7scUwV-FAyEaNdLP33pfF6DBpPaZ2IS-fppPKyfeElcgIVBhGj0W19GT3p4fKLZrcSTDBjJsVsvYyOYE6AkSilnZ">
+</div>
+<!-- Map Overlays -->
+<div class="absolute top-1/4 left-1/4 w-3 h-3 bg-status-emerald rounded-full border-2 border-white shadow-[0_0_10px_rgba(16,185,129,0.5)] z-10 animate-pulse"></div>
+<div class="absolute top-1/3 left-1/2 w-3 h-3 bg-status-emerald rounded-full border-2 border-white shadow-[0_0_10px_rgba(16,185,129,0.5)] z-10"></div>
+<div class="absolute top-1/2 left-1/3 w-3 h-3 bg-status-emerald rounded-full border-2 border-white shadow-[0_0_10px_rgba(16,185,129,0.5)] z-10 animate-ping"></div>
+</div>
+<div class="space-y-3">
+<div class="flex items-center justify-between p-2 rounded bg-surface-container">
+<div class="flex items-center gap-3">
+<span class="w-2 h-2 rounded-full bg-status-emerald"></span>
+<span class="font-body-md text-body-md text-on-surface font-medium">US-East (N. Virginia)</span>
+</div>
+<span class="font-label-mono text-label-mono text-on-surface-muted">Primary</span>
+</div>
+<div class="flex items-center justify-between p-2 rounded hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-3">
+<span class="w-2 h-2 rounded-full bg-status-emerald"></span>
+<span class="font-body-md text-body-md text-on-surface font-medium">US-West (Oregon)</span>
+</div>
+<span class="font-label-mono text-label-mono text-on-surface-muted">Replica</span>
+</div>
+</div>
+</div>
+<!-- System Logs (Bottom Row spanning full width) -->
+<div class="md:col-span-12 bg-surface-container-lowest rounded-xl border border-border-subtle overflow-hidden">
+<div class="px-6 py-4 border-b border-border-subtle flex justify-between items-center bg-surface-dim">
+<h3 class="font-headline-md text-headline-md text-on-surface font-semibold flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-muted" data-icon="terminal">terminal</span>
+                        Live System Logs
+                    </h3>
+<button class="font-label-mono text-label-mono uppercase text-primary hover:text-primary-container transition-colors">Export Logs</button>
+</div>
+<div class="w-full overflow-x-auto">
+<table class="w-full text-left border-collapse min-w-[800px]">
+<thead>
+<tr class="bg-surface-dim font-label-mono text-label-mono uppercase text-on-surface-muted">
+<th class="py-3 px-6 font-medium border-b border-border-subtle w-32">Timestamp</th>
+<th class="py-3 px-6 font-medium border-b border-border-subtle w-32">Level</th>
+<th class="py-3 px-6 font-medium border-b border-border-subtle w-48">Service</th>
+<th class="py-3 px-6 font-medium border-b border-border-subtle">Message</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-body-sm text-on-surface font-mono">
+<tr class="hover:bg-surface-container/50 transition-colors border-b border-border-subtle">
+<td class="py-3 px-6 text-on-surface-muted">14:23:45.102</td>
+<td class="py-3 px-6"><span class="bg-surface-variant text-on-surface-variant px-2 py-0.5 rounded text-[10px] font-bold uppercase">Info</span></td>
+<td class="py-3 px-6">ASR_Worker_2</td>
+<td class="py-3 px-6">Model weights reloaded successfully in 45ms.</td>
+</tr>
+<tr class="hover:bg-surface-container/50 transition-colors border-b border-border-subtle">
+<td class="py-3 px-6 text-on-surface-muted">14:23:40.991</td>
+<td class="py-3 px-6"><span class="bg-error-container text-on-error-container px-2 py-0.5 rounded text-[10px] font-bold uppercase">Warn</span></td>
+<td class="py-3 px-6">VoIP_Gateway</td>
+<td class="py-3 px-6">Slight jitter detected on incoming stream (id: 8f92a). Compensating buffer.</td>
+</tr>
+<tr class="hover:bg-surface-container/50 transition-colors border-b border-border-subtle">
+<td class="py-3 px-6 text-on-surface-muted">14:23:35.000</td>
+<td class="py-3 px-6"><span class="bg-surface-variant text-on-surface-variant px-2 py-0.5 rounded text-[10px] font-bold uppercase">Info</span></td>
+<td class="py-3 px-6">Gemini_Interface</td>
+<td class="py-3 px-6">Context window cleared for session 4492. Tokens freed: 4096.</td>
+</tr>
+<tr class="hover:bg-surface-container/50 transition-colors border-b border-border-subtle">
+<td class="py-3 px-6 text-on-surface-muted">14:23:22.115</td>
+<td class="py-3 px-6"><span class="bg-surface-variant text-on-surface-variant px-2 py-0.5 rounded text-[10px] font-bold uppercase">Info</span></td>
+<td class="py-3 px-6">System_Monitor</td>
+<td class="py-3 px-6">Routine health check passed across all primary nodes.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full bg-surface border-t border-border-subtle z-50 pb-safe">
+<ul class="flex justify-around items-center h-16">
+<li class="flex-1">
+<a class="flex flex-col items-center justify-center h-full text-on-surface-muted hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-mono text-[10px] mt-1">Dashboard</span>
+</a>
+</li>
+<li class="flex-1">
+<a class="flex flex-col items-center justify-center h-full text-on-surface-muted hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span class="font-label-mono text-[10px] mt-1">History</span>
+</a>
+</li>
+<li class="flex-1">
+<a class="flex flex-col items-center justify-center h-full text-secondary-container hover:text-secondary-fixed transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="dns" data-weight="fill" style="font-variation-settings: &quot;FILL&quot; 1;">dns</span>
+<span class="font-label-mono text-[10px] mt-1 font-bold">Status</span>
+</a>
+</li>
+<li class="flex-1">
+<a class="flex flex-col items-center justify-center h-full text-on-surface-muted hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-mono text-[10px] mt-1">Settings</span>
+</a>
+</li>
+</ul>
+</nav>
+
+
+
+
+
+
+
+
+</body></html>

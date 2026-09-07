@@ -1,0 +1,308 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Nemo Agent - New Campaign</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-highest": "#dae2fd",
+                        "secondary-fixed-dim": "#68dba9",
+                        "error": "#ba1a1a",
+                        "surface-bright": "#faf8ff",
+                        "error-container": "#ffdad6",
+                        "secondary": "#006c4a",
+                        "on-secondary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "background": "#faf8ff",
+                        "on-primary-container": "#eeefff",
+                        "on-surface": "#131b2e",
+                        "on-tertiary-fixed-variant": "#7f2b00",
+                        "on-secondary-fixed": "#002114",
+                        "on-primary": "#ffffff",
+                        "on-surface-variant": "#434655",
+                        "surface-container": "#f1f5f9",
+                        "tertiary-fixed": "#ffdbce",
+                        "primary": "#004ac6",
+                        "inverse-on-surface": "#eef0ff",
+                        "tertiary": "#973400",
+                        "surface-dim": "#f8fafc",
+                        "surface-container-high": "#e2e7ff",
+                        "tertiary-container": "#c04400",
+                        "surface": "#ffffff",
+                        "status-emerald": "#10b981",
+                        "secondary-fixed": "#85f8c4",
+                        "surface-tint": "#0053db",
+                        "primary-container": "#2563eb",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed-dim": "#ffb599",
+                        "inverse-surface": "#283044",
+                        "secondary-container": "#82f5c1",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-container": "#00714e",
+                        "border-subtle": "#e2e8f0",
+                        "on-tertiary-fixed": "#370e00",
+                        "on-primary-fixed": "#00174b",
+                        "surface-container-low": "#f2f3ff",
+                        "on-tertiary-container": "#ffede7",
+                        "on-surface-muted": "#64748b",
+                        "surface-variant": "#dae2fd",
+                        "outline": "#737686",
+                        "on-secondary-fixed-variant": "#005137",
+                        "primary-fixed": "#dbe1ff",
+                        "primary-fixed-dim": "#b4c5ff",
+                        "on-background": "#131b2e",
+                        "inverse-primary": "#b4c5ff",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed-variant": "#003ea8",
+                        "outline-variant": "#c3c6d7"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-gap-lg": "32px",
+                        "container-padding": "24px",
+                        "stack-gap-md": "16px",
+                        "sidebar-width": "280px",
+                        "grid-gutter": "20px",
+                        "stack-gap-sm": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "transcript-text": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "display-metrics": ["Inter"],
+                        "label-mono": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-md": ["18px", { "lineHeight": "28px", "fontWeight": "500" }],
+                        "transcript-text": ["14px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "display-metrics": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "label-mono": ["11px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md antialiased min-h-screen">
+<!-- SideNavBar -->
+<nav class="hidden md:flex w-[280px] h-full fixed left-0 top-0 bg-surface border-r border-border-subtle flex-col py-stack-gap-lg px-stack-gap-md z-40">
+<!-- Brand Header -->
+<div class="flex items-center gap-3 mb-10 px-3">
+<img src="https://lh3.googleusercontent.com/aida/AEtjO1Vpmtf2kKbAjcwbXQnmggj0mPJWY3GbEYBeVZHBKa59uDBzX7eT5XjxSEB0urgCjBABUyfbJHcinyunMs7CyrGx-M4bk8Vjor_xRuEj7f_8kWFzNTG_4Ak06z6pNiYwRlud6QCajg1kM4v2uFbPIBvWjKmCnPGTvdmZ37vTWRdzNSjF9hlVTufLdKjBXZvMQICTh82U6R8hD-DLk8zMm5TTpd7KiyucbuknraK2U9FULMrVm3tjt5lMYIw" alt="NEMO Logo" class="h-10 w-10 object-contain rounded-lg">
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-on-surface">Nemo Agent</h1>
+<p class="font-body-sm text-body-sm text-on-surface-muted">AI Voice Intelligence</p>
+</div>
+</div>
+<!-- Navigation Links -->
+<ul class="space-y-2 flex-grow">
+<li class="">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-muted hover:bg-surface-container transition-colors cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-muted hover:bg-surface-container transition-colors cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined text-[20px]">settings_input_antenna</span>
+<span class="font-body-md text-body-md">Live Calls</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-muted hover:bg-surface-container transition-colors cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined text-[20px]">history</span>
+<span class="font-body-md text-body-md">Call History</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-muted hover:bg-surface-container transition-colors cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined text-[20px]">send_time_extension</span>
+<span class="font-body-md text-body-md">Follow-ups</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-muted hover:bg-surface-container transition-colors cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined text-[20px]">monitoring</span>
+<span class="font-body-md text-body-md">System Status</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-muted hover:bg-surface-container transition-colors cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined text-[20px]">menu_book</span>
+<span class="font-body-md text-body-md">Knowledge Base</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-muted hover:bg-surface-container transition-colors cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+</li>
+</ul>
+<!-- CTA -->
+<div class="mt-auto">
+<button class="w-full bg-primary-container text-on-primary py-2.5 px-4 rounded-lg font-body-md text-body-md font-medium shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2 relative">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                New Campaign
+                <!-- Active Indicator for this flow -->
+<span class="absolute -right-1 -top-1 w-3 h-3 bg-status-emerald rounded-full border-2 border-surface"></span>
+</button>
+</div>
+</nav>
+<!-- TopNavBar -->
+<header class="hidden md:flex h-16 fixed top-0 right-0 w-[calc(100%-280px)] bg-surface/80 backdrop-blur-md border-b border-border-subtle items-center justify-between px-container-padding z-30">
+<div class="flex items-center gap-4">
+<div class="relative focus-within:ring-2 focus-within:ring-primary rounded-lg">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-muted text-[20px]">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container border-none rounded-lg font-body-sm text-body-sm focus:bg-surface focus:ring-0 w-[300px] transition-colors text-on-surface placeholder:text-on-surface-muted" placeholder="Search campaigns, agents, calls..." type="text">
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-muted hover:text-primary transition-colors cursor-pointer">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-muted hover:text-primary transition-colors cursor-pointer">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-border-subtle cursor-pointer">
+<img class="w-full h-full object-cover" data-alt="Professional headshot of a corporate executive in a modern bright office setting. Soft natural lighting. Minimalist high-key light mode style. The image conveys authority, precision, and enterprise professionalism." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA7qxegRIXUXGOXjXdTtnM4PYqjo-fSJJxhyhycXo7Mz1Lsn8KqI1Y1g6o8V9k9rLcZ_8murnhWnNQ_1TksURExJH51M42YIXNH2lLsTnTv87zXWkAyG0bILcBD5giVqiRRSlSTHJeb-TUWmia9fJGvV1pH6T94VUPyzTTzuRUZWeBjaWjAnPq6jrSr-5rGsPljrEAriLPohSTGkgFQkuka4FdZ130DlEMsysjvvHifmwubq8zH6iNW">
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="md:ml-[280px] md:mt-16 p-container-padding">
+<!-- Page Header & Stepper -->
+<div class="max-w-5xl mx-auto mb-stack-gap-lg">
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-2">Create New Campaign</h2>
+<p class="font-body-md text-body-md text-on-surface-muted mb-8">Configure your AI agent, define targeting, and set measurable goals.</p>
+<!-- Stepper -->
+<div class="flex items-center justify-between relative mb-stack-gap-lg">
+<div class="absolute left-0 top-1/2 -translate-y-1/2 w-full h-[2px] bg-border-subtle -z-10"></div>
+<div class="absolute left-0 top-1/2 -translate-y-1/2 w-1/3 h-[2px] bg-primary -z-10 transition-all duration-500"></div>
+<!-- Step 1: Active -->
+<div class="flex flex-col items-center gap-2 bg-background px-4">
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-headline-md text-headline-md shadow-[0_4px_12px_rgba(37,99,235,0.2)]">1</div>
+<span class="font-body-sm text-body-sm font-medium text-primary">Agent Selection</span>
+</div>
+<!-- Step 2: Inactive -->
+<div class="flex flex-col items-center gap-2 bg-background px-4">
+<div class="w-10 h-10 rounded-full bg-surface-container border border-border-subtle text-on-surface-muted flex items-center justify-center font-headline-md text-headline-md">2</div>
+<span class="font-body-sm text-body-sm text-on-surface-muted">Targeting &amp; Triggers</span>
+</div>
+<!-- Step 3: Inactive -->
+<div class="flex flex-col items-center gap-2 bg-background px-4">
+<div class="w-10 h-10 rounded-full bg-surface-container border border-border-subtle text-on-surface-muted flex items-center justify-center font-headline-md text-headline-md">3</div>
+<span class="font-body-sm text-body-sm text-on-surface-muted">Goal Setting</span>
+</div>
+</div>
+</div>
+<!-- Step 1 Content: Agent Selection Grid -->
+<div class="max-w-5xl mx-auto">
+<div class="mb-6 flex justify-between items-end">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-1">Select an AI Persona</h3>
+<p class="font-body-sm text-body-sm text-on-surface-muted">Choose the base model optimized for your campaign's primary objective.</p>
+</div>
+<div class="flex gap-2">
+<button class="px-3 py-1.5 rounded-md border border-border-subtle font-body-sm text-body-sm hover:bg-surface-container transition-colors">Filters <span class="material-symbols-outlined text-[14px] align-middle ml-1">filter_list</span></button>
+</div>
+</div>
+<!-- Bento Grid Layout for Personas -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-grid-gutter mb-stack-gap-lg">
+<!-- Persona Card 1: Selected State -->
+<div class="bg-surface rounded-xl border-2 border-primary shadow-[0_4px_12px_rgba(15,23,42,0.05)] p-6 relative cursor-pointer group transition-all hover:-translate-y-1">
+<div class="absolute top-4 right-4 text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="w-12 h-12 rounded-lg bg-primary-fixed flex items-center justify-center mb-4 text-primary-container">
+<span class="material-symbols-outlined text-[28px]">support_agent</span>
+</div>
+<h4 class="font-headline-md text-headline-md text-on-surface mb-2">Professional Receptionist</h4>
+<p class="font-body-sm text-body-sm text-on-surface-muted mb-4 h-14">Optimized for inbound routing, scheduling, and polite gatekeeping with high empathetic resonance.</p>
+<div class="flex flex-wrap gap-2 mt-auto">
+<span class="px-2 py-1 rounded bg-surface-container text-on-surface font-label-mono text-label-mono uppercase tracking-wider">Inbound</span>
+<span class="px-2 py-1 rounded bg-surface-container text-on-surface font-label-mono text-label-mono uppercase tracking-wider">Scheduling</span>
+</div>
+</div>
+<!-- Persona Card 2 -->
+<div class="bg-surface rounded-xl border border-border-subtle p-6 relative cursor-pointer group transition-all hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(15,23,42,0.05)] hover:border-outline-variant">
+<div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center mb-4 text-on-surface-muted group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[28px]">trending_up</span>
+</div>
+<h4 class="font-headline-md text-headline-md text-on-surface mb-2">Sales Closer</h4>
+<p class="font-body-sm text-body-sm text-on-surface-muted mb-4 h-14">Aggressive objection handling, structured pitch delivery, and clear CTA orientation.</p>
+<div class="flex flex-wrap gap-2 mt-auto">
+<span class="px-2 py-1 rounded bg-surface-container text-on-surface font-label-mono text-label-mono uppercase tracking-wider">Outbound</span>
+<span class="px-2 py-1 rounded bg-surface-container text-on-surface font-label-mono text-label-mono uppercase tracking-wider">Conversion</span>
+</div>
+</div>
+<!-- Persona Card 3 -->
+<div class="bg-surface rounded-xl border border-border-subtle p-6 relative cursor-pointer group transition-all hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(15,23,42,0.05)] hover:border-outline-variant">
+<div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center mb-4 text-on-surface-muted group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[28px]">terminal</span>
+</div>
+<h4 class="font-headline-md text-headline-md text-on-surface mb-2">Technical Support</h4>
+<p class="font-body-sm text-body-sm text-on-surface-muted mb-4 h-14">Logical troubleshooting trees, precise jargon usage, and API documentation querying.</p>
+<div class="flex flex-wrap gap-2 mt-auto">
+<span class="px-2 py-1 rounded bg-surface-container text-on-surface font-label-mono text-label-mono uppercase tracking-wider">Support</span>
+<span class="px-2 py-1 rounded bg-surface-container text-on-surface font-label-mono text-label-mono uppercase tracking-wider">Diagnostic</span>
+</div>
+</div>
+<!-- Persona Card 4 -->
+<div class="bg-surface rounded-xl border border-border-subtle p-6 relative cursor-pointer group transition-all hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(15,23,42,0.05)] hover:border-outline-variant">
+<div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center mb-4 text-on-surface-muted group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[28px]">account_balance</span>
+</div>
+<h4 class="font-headline-md text-headline-md text-on-surface mb-2">Collections Agent</h4>
+<p class="font-body-sm text-body-sm text-on-surface-muted mb-4 h-14">Firm, compliant, and structured negotiation for outstanding accounts and payment setup.</p>
+<div class="flex flex-wrap gap-2 mt-auto">
+<span class="px-2 py-1 rounded bg-surface-container text-on-surface font-label-mono text-label-mono uppercase tracking-wider">Finance</span>
+<span class="px-2 py-1 rounded bg-surface-container text-on-surface font-label-mono text-label-mono uppercase tracking-wider">Compliance</span>
+</div>
+</div>
+<!-- Custom Persona Build -->
+<div class="bg-surface-container/50 rounded-xl border border-dashed border-outline p-6 relative cursor-pointer flex flex-col items-center justify-center text-center transition-all hover:bg-surface-container hover:border-primary">
+<div class="w-12 h-12 rounded-full bg-surface border border-border-subtle flex items-center justify-center mb-3 text-on-surface">
+<span class="material-symbols-outlined text-[24px]">add</span>
+</div>
+<h4 class="font-headline-md text-headline-md text-on-surface mb-1">Custom Build</h4>
+<p class="font-body-sm text-body-sm text-on-surface-muted">Train a new persona from scratch using your own prompt architecture.</p>
+</div>
+</div>
+<!-- Action Bar -->
+<div class="flex justify-end gap-4 border-t border-border-subtle pt-6">
+<button class="px-6 py-2.5 rounded-lg border border-border-subtle font-body-md text-body-md text-on-surface hover:bg-surface-container transition-colors">Cancel</button>
+<button class="px-6 py-2.5 rounded-lg bg-primary-container text-on-primary font-body-md text-body-md font-medium shadow-sm hover:opacity-90 transition-opacity flex items-center gap-2">
+                    Next Step 
+                    <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</main>
+
+
+
+
+</body></html>

@@ -1,0 +1,522 @@
+<!DOCTYPE html><html class="light" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>CallAgent AI - Settings</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS Config -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed-variant": "#005137",
+                        "background": "#faf8ff",
+                        "on-tertiary-fixed-variant": "#7f2b00",
+                        "surface-dim": "#f8fafc",
+                        "secondary": "#006c4a",
+                        "surface-container-low": "#f2f3ff",
+                        "on-primary": "#ffffff",
+                        "outline-variant": "#c3c6d7",
+                        "on-primary-container": "#eeefff",
+                        "surface-container": "#eaedff",
+                        "primary-container": "#2563eb",
+                        "primary-fixed": "#dbe1ff",
+                        "tertiary-container": "#c04400",
+                        "tertiary": "#973400",
+                        "on-tertiary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "outline": "#737686",
+                        "surface-variant": "#dae2fd",
+                        "on-primary-fixed": "#00174b",
+                        "on-background": "#131b2e",
+                        "on-error": "#ffffff",
+                        "on-secondary-fixed": "#002114",
+                        "on-surface-variant": "#434655",
+                        "inverse-on-surface": "#eef0ff",
+                        "surface-tint": "#0053db",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-container": "#00714e",
+                        "tertiary-fixed-dim": "#ffb599",
+                        "status-emerald": "#10b981",
+                        "secondary-fixed": "#85f8c4",
+                        "border-subtle": "#e2e8f0",
+                        "surface-bright": "#faf8ff",
+                        "inverse-primary": "#b4c5ff",
+                        "on-surface-muted": "#64748b",
+                        "primary": "#004ac6",
+                        "inverse-surface": "#283044",
+                        "tertiary-fixed": "#ffdbce",
+                        "surface-container-highest": "#dae2fd",
+                        "on-surface": "#131b2e",
+                        "surface-container-high": "#e2e7ff",
+                        "primary-fixed-dim": "#b4c5ff",
+                        "on-tertiary-container": "#ffede7",
+                        "error": "#ba1a1a",
+                        "on-primary-fixed-variant": "#003ea8",
+                        "on-tertiary-fixed": "#370e00",
+                        "on-secondary": "#ffffff",
+                        "secondary-container": "#82f5c1",
+                        "secondary-fixed-dim": "#68dba9",
+                        "surface": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-gap-lg": "32px",
+                        "stack-gap-sm": "8px",
+                        "container-padding": "24px",
+                        "sidebar-width": "280px",
+                        "grid-gutter": "20px",
+                        "stack-gap-md": "16px"
+                    },
+                    "fontFamily": {
+                        "display-metrics": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-mono": ["JetBrains Mono"],
+                        "headline-md": ["Inter"],
+                        "transcript-text": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "display-metrics": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-mono": ["11px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "headline-md": ["18px", { "lineHeight": "28px", "fontWeight": "500" }],
+                        "transcript-text": ["14px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Custom styles for etched inputs and toggles */
+        .etched-input {
+            background-color: theme('colors.surface-container');
+            border: 2px solid transparent;
+            transition: all 0.2s ease-in-out;
+        }
+        .etched-input:focus {
+            background-color: theme('colors.surface');
+            border-color: theme('colors.primary');
+            outline: none;
+        }
+        
+        /* Toggle Switch */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: theme('colors.primary-container');
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: theme('colors.primary-container');
+        }
+        
+        /* Hide scrollbar for clean aesthetic */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: theme('colors.outline-variant');
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md antialiased overflow-hidden flex h-screen">
+<!-- TopNavBar (Mobile Only) -->
+<nav class="md:hidden flex justify-between items-center w-full px-container-padding h-16 bg-surface dark:bg-surface-container-low docked full-width top-0 border-b border-border-subtle dark:border-outline-variant flat no shadows fixed z-50">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed" style="font-variation-settings: &quot;FILL&quot; 1;">forum</span>
+<span class="font-headline-lg text-headline-lg font-bold text-primary dark:text-primary-fixed">CallAgent AI</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="font-body-md text-body-md text-on-surface-muted hidden sm:block">System Online</span>
+<div class="flex gap-2">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer active:opacity-80 hover:text-primary transition-colors">notifications</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer active:opacity-80 hover:text-primary transition-colors">account_circle</span>
+</div>
+</div>
+</nav>
+<!-- SideNavBar (Desktop Only) -->
+<aside class="hidden md:flex flex-col h-screen fixed left-0 top-0 py-6 bg-surface-container-lowest dark:bg-surface-container-low text-primary dark:text-primary-fixed font-label-mono text-label-mono uppercase docked left-0 w-sidebar-width border-r border-border-subtle dark:border-outline-variant flat no shadows z-40">
+<!-- Header -->
+<div class="px-6 mb-8 flex flex-col gap-1">
+  <div class="flex items-center gap-3 mb-2">
+    <div class="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0">
+      <img src="https://lh3.googleusercontent.com/aida/AEtjO1XUdqH2oR28ytoMiUdLH8xxxLOwDIX7qdTAMfkFcDof6ax_HAFHrznoG8WeExGQrlS3gLi06dBkBixHAylcsRocIevJq-KP530HzeSWJLnIJQVN9zRvlI7aRTzqjgIJ_ti16r9VCGQ9-gsIVD-5WCPVm4CJANsC9qtFfQbeb9irJcXFnOr8nWl7Tp2jleUXfb1d0zaU2bObZUGtrw84YSIs4z2bDV_yjBgFgp_idHvzamQNydpIUxv6Jy0" alt="Nemo Agent Logo" class="w-full h-full object-contain rounded-xl">
+    </div>
+    <div>
+      <h1 class="font-headline-md text-headline-md text-on-surface font-bold tracking-tight">Nemo Agent</h1>
+    </div>
+  </div>
+  <p class="font-label-mono text-label-mono uppercase text-on-surface-muted">Autonomous Receptionist</p>
+</div>
+<!-- CTA -->
+<div class="px-6 mb-6">
+<button class="w-full bg-primary-container text-on-primary font-body-md text-body-md font-medium rounded py-2 px-4 flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                New Campaign
+            </button>
+</div>
+<!-- Main Navigation -->
+<nav class="flex-1 overflow-y-auto px-4 space-y-1">
+<a class="flex items-center gap-stack-gap-md px-4 py-3 cursor-pointer text-on-surface-variant dark:text-on-surface-muted hover:bg-surface-container dark:hover:bg-surface-container-highest transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="">Dashboard</span>
+</a>
+<a class="flex items-center gap-stack-gap-md px-4 py-3 cursor-pointer text-on-surface-variant dark:text-on-surface-muted hover:bg-surface-container dark:hover:bg-surface-container-highest transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">ring_volume</span>
+<span class="">Live Calls</span>
+</a>
+<a class="flex items-center gap-stack-gap-md px-4 py-3 cursor-pointer text-on-surface-variant dark:text-on-surface-muted hover:bg-surface-container dark:hover:bg-surface-container-highest transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">history</span>
+<span class="">Call History</span>
+</a>
+<a class="flex items-center gap-stack-gap-md px-4 py-3 cursor-pointer text-on-surface-variant dark:text-on-surface-muted hover:bg-surface-container dark:hover:bg-surface-container-highest transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">find_replace</span>
+<span class="">Follow-ups</span>
+</a>
+<a class="flex items-center gap-stack-gap-md px-4 py-3 cursor-pointer text-on-surface-variant dark:text-on-surface-muted hover:bg-surface-container dark:hover:bg-surface-container-highest transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">dns</span>
+<span class="">System Status</span>
+</a>
+<a class="flex items-center gap-stack-gap-md px-4 py-3 cursor-pointer text-on-surface-variant dark:text-on-surface-muted hover:bg-surface-container dark:hover:bg-surface-container-highest transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">menu_book</span>
+<span class="">Knowledge Base</span>
+</a>
+</nav>
+<!-- Footer Navigation -->
+<div class="px-4 mt-auto space-y-1 pt-4 border-t border-border-subtle mx-4">
+<a class="flex items-center gap-stack-gap-md px-4 py-3 cursor-pointer bg-secondary-container dark:bg-on-secondary-fixed-variant text-on-secondary-container dark:text-secondary-fixed rounded-lg font-bold" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: &quot;FILL&quot; 1;">settings</span>
+<span class="">Settings</span>
+</a>
+<a class="flex items-center gap-stack-gap-md px-4 py-3 cursor-pointer text-on-surface-variant dark:text-on-surface-muted hover:bg-surface-container dark:hover:bg-surface-container-highest transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="">Support</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-sidebar-width h-full overflow-y-auto bg-surface mt-16 md:mt-0 pb-20 md:pb-0">
+<!-- Header Section -->
+<header class="px-container-padding py-4 border-b border-border-subtle bg-surface/95 backdrop-blur sticky top-0 z-30 w-full">
+  <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
+    <div class="flex items-center gap-3 min-w-max">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="font-label-mono text-label-mono uppercase text-on-surface-muted">WORKSPACE</span>
+          <span class="text-on-surface-muted text-body-sm">/</span>
+          <span class="font-label-mono text-label-mono uppercase text-primary font-medium">SETTINGS</span>
+        </div>
+        <h2 class="font-headline-md text-headline-md text-on-surface font-semibold leading-tight">Configuration Workspace</h2>
+      </div>
+    </div>
+    
+    <div class="hidden md:flex flex-1 max-w-md mx-4 items-center">
+      <div class="relative w-full">
+        <span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-muted text-[18px]">search</span>
+        <input type="text" placeholder="Search settings, keys, webhooks..." class="w-full bg-surface-container-low border border-border-subtle rounded-lg pl-9 pr-4 py-2 font-body-sm text-body-sm text-on-surface focus:bg-surface focus:outline-none focus:border-primary transition-all">
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button class="relative p-2 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" title="Notifications">
+        <span class="material-symbols-outlined text-[20px]">notifications</span>
+        <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-primary"></span>
+      </button>
+      <button class="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" title="Help &amp; Documentation">
+        <span class="material-symbols-outlined text-[20px]">help_outline</span>
+      </button>
+      <div class="h-6 w-px bg-border-subtle mx-1 hidden sm:block"></div>
+      <div class="flex items-center gap-2 pl-1">
+        <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDsRtVv5YjO386OmVW2xfsIOPjCeaBiFy9tJDlW0-RBHtZ6lfutAd--8OE4cXYlCb_UBfm_AhWvbSbejKzbyjb8bUh4C9Hw2oUFlhlVaMVwP_beWg4J5_goE6QI2TbPp4f2xt_iKjLctuHJgdiFZ4MuRp-JnQ2AIVz6mFWI1JnGZiTnk6aItEVrYcozeJMHrdVkYoa5CH1Ki0SQktMazuH1913oRugkftoO1GufbjJ6UbGDNRLEBycc" alt="Sarah Jenkins" class="w-9 h-9 rounded-full object-cover border border-border-subtle flex-shrink-0">
+        <div class="hidden xl:flex flex-col text-left">
+          <span class="font-body-sm text-body-sm font-medium text-on-surface leading-none">Sarah Jenkins</span>
+          <span class="font-label-mono text-[10px] text-on-surface-muted uppercase mt-0.5">Admin</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+<div class="p-container-padding max-w-5xl mx-auto space-y-stack-gap-lg pt-8"><div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border-subtle">
+  <div>
+    <p class="font-body-md text-body-md text-on-surface-muted">Manage agent behaviors, access controls, and system integrations.</p>
+  </div>
+  <div class="flex items-center gap-3 self-end sm:self-auto">
+    <button class="px-4 py-2 rounded-lg bg-surface border border-border-subtle text-on-surface font-label-mono text-label-mono uppercase hover:bg-surface-dim transition-colors shadow-sm">Discard Changes</button>
+    <button class="px-4 py-2 rounded-lg bg-primary-container text-on-primary font-label-mono text-label-mono uppercase hover:opacity-90 transition-opacity shadow-sm flex items-center gap-1.5">
+      <span class="material-symbols-outlined text-[16px]">save</span>
+      Save Configuration
+    </button>
+  </div>
+</div>
+<!-- Grid Layout for Settings -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-grid-gutter">
+<!-- Left Column (Wider for complex settings) -->
+<div class="lg:col-span-8 space-y-stack-gap-lg">
+<!-- AI Persona Section (Glassmorphism inspired card) -->
+<section class="bg-surface rounded-xl border border-border-subtle overflow-hidden relative shadow-[0_4px_12px_rgba(15,23,42,0.02)]">
+<div class="absolute inset-0 bg-gradient-to-br from-surface-container-low to-transparent opacity-50 pointer-events-none"></div>
+<div class="p-6 relative z-10 border-b border-border-subtle bg-surface-dim/50">
+<div class="flex items-center gap-3 mb-1">
+<span class="material-symbols-outlined text-primary">face</span>
+<h3 class="font-headline-md text-headline-md text-on-surface">AI Persona &amp; Voice</h3>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-muted">Configure how CallAgent interacts with your callers.</p>
+</div>
+<div class="p-6 relative z-10 space-y-6">
+<!-- Voice Selection -->
+<div>
+<label class="block font-label-mono text-label-mono uppercase text-on-surface-variant mb-2">Primary Voice Model</label>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Option 1: Selected -->
+<div class="border-2 border-primary rounded-lg p-4 bg-surface cursor-pointer flex flex-col gap-2 relative">
+<div class="absolute top-3 right-3 text-primary">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: &quot;FILL&quot; 1;">check_circle</span>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined">record_voice_over</span>
+</div>
+<div>
+<h4 class="font-body-md text-body-md font-medium text-on-surface">Nova (Default)</h4>
+<p class="text-body-sm font-body-sm text-on-surface-muted">Professional, female, neutral accent</p>
+</div>
+</div>
+<button class="mt-2 text-primary font-label-mono text-label-mono uppercase flex items-center gap-1 hover:underline">
+<span class="material-symbols-outlined text-[16px]">play_arrow</span> Preview
+                                        </button>
+</div>
+<!-- Option 2 -->
+<div class="border border-border-subtle rounded-lg p-4 bg-surface hover:border-outline-variant cursor-pointer transition-colors flex flex-col gap-2">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined">record_voice_over</span>
+</div>
+<div>
+<h4 class="font-body-md text-body-md font-medium text-on-surface">Echo</h4>
+<p class="text-body-sm font-body-sm text-on-surface-muted">Authoritative, male, deep tone</p>
+</div>
+</div>
+<button class="mt-2 text-primary font-label-mono text-label-mono uppercase flex items-center gap-1 hover:underline">
+<span class="material-symbols-outlined text-[16px]">play_arrow</span> Preview
+                                        </button>
+</div>
+</div>
+</div>
+<!-- Personality Sliders -->
+<div class="space-y-4">
+<label class="block font-label-mono text-label-mono uppercase text-on-surface-variant mb-4">Behavioral Tone</label>
+<div class="flex items-center gap-4">
+<span class="text-body-sm font-body-sm text-on-surface-muted w-24 text-right">Concise</span>
+<input class="w-full h-2 bg-surface-container rounded-lg appearance-none cursor-pointer accent-primary" max="100" min="1" type="range" value="70">
+<span class="text-body-sm font-body-sm text-on-surface-muted w-24">Conversational</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="text-body-sm font-body-sm text-on-surface-muted w-24 text-right">Formal</span>
+<input class="w-full h-2 bg-surface-container rounded-lg appearance-none cursor-pointer accent-primary" max="100" min="1" type="range" value="40">
+<span class="text-body-sm font-body-sm text-on-surface-muted w-24">Casual</span>
+</div>
+</div>
+<!-- Language Select -->
+<div>
+<label class="block font-label-mono text-label-mono uppercase text-on-surface-variant mb-2">Supported Languages</label>
+<div class="relative">
+<select class="w-full etched-input text-on-surface font-body-md rounded-lg py-3 px-4 appearance-none">
+<option>English (US) - Primary</option>
+<option>English (UK)</option>
+<option>Spanish (ES)</option>
+<option>French (FR)</option>
+</select>
+<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-on-surface-variant">
+<span class="material-symbols-outlined">expand_more</span>
+</div>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-muted mt-2 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">info</span>
+                                    Multi-language fallback automatically detects caller language.
+                                </p>
+</div>
+</div>
+</section>
+<!-- API Keys Section -->
+<section class="bg-surface rounded-xl border border-border-subtle shadow-[0_4px_12px_rgba(15,23,42,0.02)]">
+<div class="p-6 border-b border-border-subtle bg-surface-dim/50">
+<div class="flex items-center gap-3 mb-1">
+<span class="material-symbols-outlined text-primary">key</span>
+<h3 class="font-headline-md text-headline-md text-on-surface">API &amp; Webhooks</h3>
+</div>
+</div>
+<div class="p-6">
+<div class="space-y-4">
+<div class="flex justify-between items-end mb-2">
+<label class="block font-label-mono text-label-mono uppercase text-on-surface-variant">Production API Key</label>
+<button class="text-primary font-label-mono text-label-mono uppercase hover:underline">Revoke Key</button>
+</div>
+<div class="flex gap-2">
+<input class="flex-1 etched-input text-on-surface font-body-md rounded-lg py-3 px-4" id="apiKey" readonly="" type="password" value="sk_live_9876543210abcdefghijklmnop">
+<button class="bg-surface-container text-on-surface-variant hover:bg-outline-variant hover:text-on-surface px-4 rounded-lg transition-colors flex items-center justify-center border border-transparent" onclick="document.getElementById('apiKey').type = document.getElementById('apiKey').type === 'password' ? 'text' : 'password'">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+<button class="bg-surface-container text-on-surface-variant hover:bg-outline-variant hover:text-on-surface px-4 rounded-lg transition-colors flex items-center justify-center border border-transparent">
+<span class="material-symbols-outlined">content_copy</span>
+</button>
+</div>
+<div class="mt-6 pt-6 border-t border-border-subtle">
+<div class="flex items-center justify-between">
+<div>
+<h4 class="font-body-md text-body-md font-medium text-on-surface">Webhook Endpoint</h4>
+<p class="text-body-sm font-body-sm text-on-surface-muted">Receive real-time call transcripts.</p>
+</div>
+<!-- Toggle Switch -->
+<div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-surface-container appearance-none cursor-pointer z-10" id="webhookToggle" name="toggle" type="checkbox">
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-surface-container cursor-pointer" for="webhookToggle"></label>
+</div>
+</div>
+<input class="w-full etched-input text-on-surface font-body-md rounded-lg py-3 px-4 mt-3" placeholder="https://..." type="text" value="https://api.yourdomain.com/webhooks/callagent">
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Column (Narrower for status/billing/access) -->
+<div class="lg:col-span-4 space-y-stack-gap-lg">
+<!-- Team Access (Bento style mini-list) -->
+<section class="bg-surface rounded-xl border border-border-subtle shadow-[0_4px_12px_rgba(15,23,42,0.02)] flex flex-col h-[320px]">
+<div class="p-5 border-b border-border-subtle flex justify-between items-center bg-surface-dim/50">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">group</span>
+<h3 class="font-headline-md text-body-md font-medium text-on-surface">Team Access</h3>
+</div>
+<button class="text-primary hover:bg-surface-container rounded-full p-1 transition-colors">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto p-2">
+<!-- User 1 -->
+<div class="flex items-center justify-between p-3 hover:bg-surface-dim rounded-lg transition-colors group">
+<div class="flex items-center gap-3">
+<img class="w-8 h-8 rounded-full object-cover bg-surface-container" data-alt="A small, professional headshot photo of a young corporate executive in a bright, modern office, lit by natural daylight, light mode aesthetic, clean white background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDsRtVv5YjO386OmVW2xfsIOPjCeaBiFy9tJDlW0-RBHtZ6lfutAd--8OE4cXYlCb_UBfm_AhWvbSbejKzbyjb8bUh4C9Hw2oUFlhlVaMVwP_beWg4J5_goE6QI2TbPp4f2xt_iKjLctuHJgdiFZ4MuRp-JnQ2AIVz6mFWI1JnGZiTnk6aItEVrYcozeJMHrdVkYoa5CH1Ki0SQktMazuH1913oRugkftoO1GufbjJ6UbGDNRLEBycc">
+<div>
+<p class="font-body-md text-body-md text-on-surface leading-tight">Sarah Jenkins</p>
+<p class="font-label-mono text-[10px] text-on-surface-muted uppercase">Admin</p>
+</div>
+</div>
+<button class="opacity-0 group-hover:opacity-100 text-on-surface-variant hover:text-error transition-all">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+<!-- User 2 -->
+<div class="flex items-center justify-between p-3 hover:bg-surface-dim rounded-lg transition-colors group">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary-fixed-dim text-on-primary-fixed-variant flex items-center justify-center font-bold text-body-sm">
+                                        MR
+                                    </div>
+<div>
+<p class="font-body-md text-body-md text-on-surface leading-tight">Mike Ross</p>
+<p class="font-label-mono text-[10px] text-on-surface-muted uppercase">Editor</p>
+</div>
+</div>
+<button class="opacity-0 group-hover:opacity-100 text-on-surface-variant hover:text-error transition-all">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+<!-- User 3 -->
+<div class="flex items-center justify-between p-3 hover:bg-surface-dim rounded-lg transition-colors group">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center font-bold text-body-sm">
+                                        DL
+                                    </div>
+<div>
+<p class="font-body-md text-body-md text-on-surface leading-tight">David Lee</p>
+<p class="font-label-mono text-[10px] text-on-surface-muted uppercase">Viewer</p>
+</div>
+</div>
+<button class="opacity-0 group-hover:opacity-100 text-on-surface-variant hover:text-error transition-all">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Billing Summary Card -->
+<section class="bg-surface rounded-xl border border-border-subtle shadow-[0_4px_12px_rgba(15,23,42,0.02)] overflow-hidden">
+<div class="p-5 border-b border-border-subtle bg-surface-dim/50 flex justify-between items-center">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">credit_card</span>
+<h3 class="font-headline-md text-body-md font-medium text-on-surface">Billing Overview</h3>
+</div>
+<span class="bg-status-emerald/10 text-status-emerald font-label-mono text-[10px] uppercase px-2 py-1 rounded">Active</span>
+</div>
+<div class="p-6">
+<p class="font-label-mono text-label-mono uppercase text-on-surface-muted mb-1">Current Usage (Minutes)</p>
+<div class="flex items-end gap-2 mb-4">
+<span class="font-display-metrics text-display-metrics text-on-surface">4,250</span>
+<span class="font-body-md text-body-md text-on-surface-muted mb-1">/ 5,000</span>
+</div>
+<!-- Progress Bar -->
+<div class="w-full bg-surface-container h-2 rounded-full overflow-hidden mb-2">
+<div class="bg-primary h-full rounded-full" style="width: 85%"></div>
+</div>
+<p class="text-[11px] text-on-surface-muted text-right mb-6">Reset in 12 days</p>
+<button class="w-full py-2 border border-border-subtle rounded text-on-surface font-body-md text-body-md hover:bg-surface-dim transition-colors">
+                                Manage Subscription
+                            </button>
+</div>
+</section>
+</div>
+</div>
+<!-- Bottom spacing -->
+<div class="h-8"></div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full bg-surface dark:bg-surface-container-low border-t border-border-subtle dark:border-outline-variant z-50">
+<div class="flex justify-around items-center h-16">
+<!-- Active Tab uses primary colors -->
+<a class="flex flex-col items-center justify-center w-full h-full text-primary dark:text-primary-fixed" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: &quot;FILL&quot; 1;">settings</span>
+<span class="font-label-mono text-[10px] mt-1">Settings</span>
+</a>
+<a class="flex flex-col items-center justify-center w-full h-full text-on-surface-muted dark:text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-mono text-[10px] mt-1">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center w-full h-full text-on-surface-muted dark:text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">ring_volume</span>
+<span class="font-label-mono text-[10px] mt-1">Live Calls</span>
+</a>
+<a class="flex flex-col items-center justify-center w-full h-full text-on-surface-muted dark:text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">menu</span>
+<span class="font-label-mono text-[10px] mt-1">More</span>
+</a>
+</div>
+</nav>
+
+
+
+
+
+
+
+
+</body></html>

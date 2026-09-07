@@ -1,0 +1,639 @@
+<!DOCTYPE html><html lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Nemo Agent — Live Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "status-emerald": "#10b981",
+                "border-subtle": "#e2e8f0",
+                "on-error-container": "#93000a",
+                "surface-container-high": "#e2e7ff",
+                "on-background": "#131b2e",
+                "surface-dim": "#d2d9f4",
+                "tertiary-fixed-dim": "#ffb599",
+                "surface-bright": "#faf8ff",
+                "on-secondary-fixed-variant": "#005137",
+                "primary-fixed": "#dbe1ff",
+                "tertiary-container": "#c04400",
+                "surface-variant": "#dae2fd",
+                "error-container": "#ffdad6",
+                "surface": "#ffffff",
+                "outline": "#737686",
+                "secondary-container": "#82f5c1",
+                "surface-container-low": "#f2f3ff",
+                "on-surface": "#131b2e",
+                "primary": "#004ac6",
+                "tertiary-fixed": "#ffdbce",
+                "surface-container": "#eaedff",
+                "on-primary-fixed-variant": "#003ea8",
+                "secondary": "#006c4a",
+                "secondary-fixed": "#85f8c4",
+                "primary-fixed-dim": "#b4c5ff",
+                "background": "#faf8ff",
+                "secondary-fixed-dim": "#68dba9",
+                "on-secondary-fixed": "#002114",
+                "inverse-on-surface": "#eef0ff",
+                "surface-container-lowest": "#ffffff",
+                "error": "#ba1a1a",
+                "on-primary-container": "#eeefff",
+                "on-tertiary-fixed": "#370e00",
+                "primary-container": "#2563eb",
+                "inverse-primary": "#b4c5ff",
+                "surface-tint": "#0053db",
+                "on-tertiary-fixed-variant": "#7f2b00",
+                "on-surface-variant": "#434655",
+                "on-error": "#ffffff",
+                "on-tertiary-container": "#ffede7",
+                "on-surface-muted": "#64748b",
+                "surface-container-highest": "#dae2fd",
+                "tertiary": "#973400",
+                "on-primary": "#ffffff",
+                "on-secondary-container": "#00714e",
+                "on-tertiary": "#ffffff",
+                "on-primary-fixed": "#00174b",
+                "inverse-surface": "#283044",
+                "outline-variant": "#c3c6d7",
+                "on-secondary": "#ffffff"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "stack-gap-lg": "32px",
+                "stack-gap-sm": "8px",
+                "container-padding": "24px",
+                "sidebar-width": "280px",
+                "stack-gap-md": "16px",
+                "grid-gutter": "20px"
+        },
+        "fontFamily": {
+                "label-mono": [
+                        "JetBrains Mono"
+                ],
+                "body-sm": [
+                        "Inter"
+                ],
+                "transcript-text": [
+                        "Inter"
+                ],
+                "headline-md": [
+                        "Inter"
+                ],
+                "headline-lg": [
+                        "Inter"
+                ],
+                "body-md": [
+                        "Inter"
+                ],
+                "display-metrics": [
+                        "Inter"
+                ]
+        },
+        "fontSize": {
+                "label-mono": [
+                        "11px",
+                        {
+                                "lineHeight": "16px",
+                                "letterSpacing": "0.02em",
+                                "fontWeight": "500"
+                        }
+                ],
+                "body-sm": [
+                        "12px",
+                        {
+                                "lineHeight": "18px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "transcript-text": [
+                        "14px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-md": [
+                        "18px",
+                        {
+                                "lineHeight": "28px",
+                                "fontWeight": "500"
+                        }
+                ],
+                "headline-lg": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-md": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "display-metrics": [
+                        "36px",
+                        {
+                                "lineHeight": "44px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "600"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+    /* Adding ambient shadow as defined in elevation guidance */
+    .shadow-ambient {
+        box-shadow: 0px 4px 12px rgba(15, 23, 42, 0.05);
+    }
+    .shadow-floating {
+        box-shadow: 0px 12px 32px rgba(15, 23, 42, 0.1);
+    }
+</style>
+</head>
+<body class="bg-background text-on-surface font-body-md h-screen overflow-hidden flex">
+<!-- SideNavBar -->
+<nav class="bg-surface-container-lowest border-r border-border-subtle h-screen fixed left-0 top-0 py-6 w-sidebar-width flex flex-col justify-between hidden md:flex z-50">
+<div>
+<div class="px-6 mb-8">
+<div class="flex items-center gap-3">
+<img alt="Nemo Agent Logo" class="w-12 h-12 rounded-lg shrink-0 object-contain shadow-sm" src="https://lh3.googleusercontent.com/aida/AEtjO1Vpmtf2kKbAjcwbXQnmggj0mPJWY3GbEYBeVZHBKa59uDBzX7eT5XjxSEB0urgCjBABUyfbJHcinyunMs7CyrGx-M4bk8Vjor_xRuEj7f_8kWFzNTG_4Ak06z6pNiYwRlud6QCajg1kM4v2uFbPIBvWjKmCnPGTvdmZ37vTWRdzNSjF9hlVTufLdKjBXZvMQICTh82U6R8hD-DLk8zMm5TTpd7KiyucbuknraK2U9FULMrVm3tjt5lMYIw">
+<h1 class="font-headline-lg text-headline-lg text-on-surface font-bold tracking-tight">Nemo Agent</h1>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-muted mt-1">Autonomous Receptionist</p>
+</div>
+<div class="px-4 mb-6">
+<button class="w-full bg-primary-container text-on-primary py-2 px-4 rounded-DEFAULT font-label-mono text-label-mono flex items-center justify-center gap-2 hover:bg-surface-tint transition-colors">
+<span class="material-symbols-outlined text-sm">add</span>
+                    New Campaign
+                </button>
+</div>
+<ul class="flex flex-col gap-1 px-3"><li>
+<a class="flex items-center gap-stack-gap-md px-4 py-3 cursor-pointer bg-primary-fixed text-on-primary-fixed-variant rounded-lg font-bold shadow-sm transition-all" href="#">
+<span class="material-symbols-outlined text-primary" data-icon="dashboard">dashboard</span>
+<span class="font-label-mono text-label-mono uppercase tracking-wider">Dashboard</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-stack-gap-md px-4 py-3 cursor-pointer text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all rounded-lg font-medium" href="#">
+<span class="material-symbols-outlined text-on-surface-muted" data-icon="ring_volume">ring_volume</span>
+<span class="font-label-mono text-label-mono uppercase tracking-wider">Live Calls</span>
+<span class="ml-auto w-2 h-2 rounded-full bg-status-emerald animate-pulse"></span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-stack-gap-md px-4 py-3 cursor-pointer text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all rounded-lg font-medium" href="#">
+<span class="material-symbols-outlined text-on-surface-muted" data-icon="history">history</span>
+<span class="font-label-mono text-label-mono uppercase tracking-wider">Call History</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-stack-gap-md px-4 py-3 cursor-pointer text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all rounded-lg font-medium" href="#">
+<span class="material-symbols-outlined text-on-surface-muted" data-icon="find_replace">find_replace</span>
+<span class="font-label-mono text-label-mono uppercase tracking-wider">Follow-ups</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-stack-gap-md px-4 py-3 cursor-pointer text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all rounded-lg font-medium" href="#">
+<span class="material-symbols-outlined text-on-surface-muted" data-icon="dns">dns</span>
+<span class="font-label-mono text-label-mono uppercase tracking-wider">System Status</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-stack-gap-md px-4 py-3 cursor-pointer text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all rounded-lg font-medium" href="#">
+<span class="material-symbols-outlined text-on-surface-muted" data-icon="menu_book">menu_book</span>
+<span class="font-label-mono text-label-mono uppercase tracking-wider">Knowledge Base</span>
+</a>
+</li></ul>
+</div>
+<ul class="flex flex-col gap-1 px-3 mt-auto">
+<li class="">
+<a class="flex items-center gap-stack-gap-md px-4 py-3 cursor-pointer text-on-surface-variant hover:bg-surface-container transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-mono text-label-mono uppercase">Settings</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-stack-gap-md px-4 py-3 cursor-pointer text-on-surface-variant hover:bg-surface-container transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span class="font-label-mono text-label-mono uppercase">Support</span>
+</a>
+</li>
+</ul>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 md:ml-sidebar-width flex flex-col h-screen overflow-hidden bg-background">
+<!-- TopNavBar (Mobile Only) -->
+<header class="bg-surface border-b border-border-subtle flex justify-between items-center w-full px-container-padding h-16 md:hidden z-40 relative">
+<div class="flex items-center gap-2">
+<img alt="Nemo Agent Logo" class="w-10 h-10 rounded-lg shrink-0 object-contain shadow-sm" src="https://lh3.googleusercontent.com/aida/AEtjO1Vpmtf2kKbAjcwbXQnmggj0mPJWY3GbEYBeVZHBKa59uDBzX7eT5XjxSEB0urgCjBABUyfbJHcinyunMs7CyrGx-M4bk8Vjor_xRuEj7f_8kWFzNTG_4Ak06z6pNiYwRlud6QCajg1kM4v2uFbPIBvWjKmCnPGTvdmZ37vTWRdzNSjF9hlVTufLdKjBXZvMQICTh82U6R8hD-DLk8zMm5TTpd7KiyucbuknraK2U9FULMrVm3tjt5lMYIw">
+<div class="font-headline-lg text-headline-lg font-bold text-primary">Nemo Agent</div>
+</div>
+<div class="flex items-center gap-4 text-on-surface-muted">
+<span class="material-symbols-outlined cursor-pointer hover:text-primary transition-colors">notifications</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-primary transition-colors">account_circle</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-primary transition-colors">menu</span>
+</div>
+</header>
+<!-- Top Header for Desktop Canvas -->
+<header class="bg-surface/80 backdrop-blur-sm border-b border-border-subtle hidden md:flex justify-between items-center w-full px-8 h-16 shrink-0 sticky top-0 z-30"><div class="flex items-center gap-4">
+<h2 class="font-headline-md text-headline-md text-on-surface font-semibold">Live Dashboard</h2>
+<div class="flex items-center gap-2 bg-emerald-100/50 px-3 py-1 rounded-full border border-status-emerald/20 shadow-sm">
+<div class="w-2 h-2 rounded-full bg-status-emerald animate-pulse"></div>
+<span class="font-label-mono text-label-mono text-status-emerald font-semibold uppercase tracking-wider">System Online</span>
+</div>
+</div>
+<div class="flex-1 max-w-md mx-8">
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-on-surface-muted text-lg">search</span>
+<input class="w-full bg-surface-container-lowest border border-border-subtle rounded-lg pl-9 pr-4 py-1.5 text-body-sm text-on-surface placeholder:text-on-surface-muted focus:outline-none focus:border-primary shadow-sm font-transcript-text" placeholder="Search calls, logs, phone numbers, or intents..." type="text">
+</div>
+</div>
+<div class="flex items-center gap-4 text-on-surface-muted">
+<button class="relative p-2 rounded-lg hover:bg-surface-container hover:text-primary transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-xl">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-primary"></span>
+</button>
+<div class="w-px h-6 bg-border-subtle"></div>
+<div class="flex items-center gap-3">
+<img alt="User profile" class="w-9 h-9 rounded-full object-cover border border-border-subtle shadow-sm ring-2 ring-primary-fixed/50" data-alt="A professional headshot of a corporate executive in a modern, brightly lit office environment, serving as a user profile avatar." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_O9oH8SRw4oHnYZfKPOM3wX-N_yGybUw7tb_PmLPYWYFhTfsEDAggMcQ2zaeelPt1eLXPtYDmq5wI8PKnvVmPJN0d5mogf90YM3nOQL_hA06zgzivwrqWwk4gBX_Dz57ulZUdKqvg5D_sh9DbNvpZNTafajAeA-1ITKIfkAYPYiGqm41G384VBPMVSTIRTVzSHSYxG2QHqFQi-3LQfyI4I3ymrISQKtAA9pAriZNPZlYK9LCGT5Ip">
+</div>
+</div></header>
+<!-- Scrollable Canvas -->
+<main class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+<div class="max-w-7xl mx-auto space-y-6">
+<!-- Top Metrics Cards -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+<div class="bg-surface border border-border-subtle rounded-lg p-5 shadow-ambient flex flex-col justify-between h-32 relative overflow-hidden">
+<div class="absolute right-0 top-0 w-16 h-16 bg-blue-50 rounded-bl-full -mr-4 -mt-4 z-0"></div>
+<h3 class="font-label-mono text-label-mono text-on-surface-muted uppercase z-10 relative">Active Calls</h3>
+<div class="flex items-end justify-between z-10 relative">
+<span class="font-display-metrics text-display-metrics text-primary font-bold">1</span>
+<div class="flex items-center gap-1 text-status-emerald bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
+<span class="material-symbols-outlined text-[14px]">phone_in_talk</span>
+<span class="font-label-mono text-[10px] font-bold uppercase">Live</span>
+</div>
+</div>
+</div>
+<div class="bg-surface border border-border-subtle rounded-lg p-5 shadow-ambient flex flex-col justify-between h-32">
+<h3 class="font-label-mono text-label-mono text-on-surface-muted uppercase">Calls Today</h3>
+<div class="flex items-end justify-between">
+<span class="font-display-metrics text-display-metrics text-on-surface font-bold">73</span>
+<span class="font-label-mono text-label-mono text-status-emerald">+12% vs yday</span>
+</div>
+</div>
+<div class="bg-surface border border-border-subtle rounded-lg p-5 shadow-ambient flex flex-col justify-between h-32">
+<h3 class="font-label-mono text-label-mono text-on-surface-muted uppercase">Avg Duration</h3>
+<div class="flex items-end justify-between">
+<span class="font-display-metrics text-display-metrics text-on-surface font-bold">2m 18s</span>
+</div>
+</div>
+<div class="bg-surface border border-border-subtle rounded-lg p-5 shadow-ambient flex flex-col justify-between h-32">
+<h3 class="font-label-mono text-label-mono text-on-surface-muted uppercase">AI Latency</h3>
+<div class="flex items-end justify-between">
+<span class="font-display-metrics text-display-metrics text-on-surface font-bold">380<span class="text-xl text-on-surface-muted ml-1">ms</span></span>
+<div class="w-16 h-6 flex items-end gap-0.5">
+<div class="w-1/5 bg-status-emerald h-1/3 rounded-t-sm"></div>
+<div class="w-1/5 bg-status-emerald h-2/3 rounded-t-sm"></div>
+<div class="w-1/5 bg-status-emerald h-full rounded-t-sm"></div>
+<div class="w-1/5 bg-status-emerald h-1/2 rounded-t-sm"></div>
+<div class="w-1/5 bg-status-emerald h-3/4 rounded-t-sm"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Main Layout Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+<!-- Left Column: Live Call Panel (Spans 8 cols) -->
+<div class="lg:col-span-8 flex flex-col gap-6">
+<!-- Live Call Interface -->
+<div class="bg-surface border border-border-subtle rounded-xl shadow-ambient overflow-hidden flex flex-col h-[600px]">
+<!-- Call Header -->
+<div class="bg-surface-container-low border-b border-border-subtle p-4 flex justify-between items-center shrink-0">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-primary-fixed rounded-full flex items-center justify-center text-primary border border-primary-fixed-dim">
+<span class="material-symbols-outlined text-2xl">person</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h3 class="font-headline-md text-headline-md text-on-surface font-semibold">+91 98XXX XXXXX</h3>
+<span class="bg-surface text-on-surface-muted border border-border-subtle font-label-mono text-[10px] px-2 py-0.5 rounded uppercase font-bold tracking-wider">Hinglish</span>
+</div>
+<div class="flex items-center gap-2 mt-1">
+<span class="w-2 h-2 rounded-full bg-status-emerald animate-pulse"></span>
+<span class="font-body-sm text-body-sm text-status-emerald font-medium">AI Speaking</span>
+<span class="font-label-mono text-label-mono text-on-surface-muted ml-2">01:42</span>
+</div>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="bg-surface border border-border-subtle text-on-surface hover:bg-surface-container p-2 rounded flex items-center justify-center transition-colors shadow-sm">
+<span class="material-symbols-outlined text-xl">mic_off</span>
+</button>
+<button class="bg-surface border border-border-subtle text-on-surface hover:bg-surface-container px-4 py-2 rounded font-label-mono text-label-mono uppercase transition-colors shadow-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">phone_forwarded</span>
+                                        Transfer
+                                    </button>
+<button class="bg-error text-on-error hover:bg-on-error-container px-4 py-2 rounded font-label-mono text-label-mono uppercase transition-colors shadow-sm flex items-center gap-2 font-bold">
+<span class="material-symbols-outlined text-sm">call_end</span>
+                                        End Call
+                                    </button>
+</div>
+</div>
+<!-- Live Transcript Area -->
+<div class="flex-1 p-6 overflow-y-auto bg-background flex flex-col gap-6 font-transcript-text text-transcript-text relative" id="transcript-container">
+<!-- Watermark -->
+<div class="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none select-none z-0">
+<span class="material-symbols-outlined text-[200px]">forum</span>
+</div>
+<!-- Messages -->
+<div class="flex gap-4 max-w-[85%] z-10">
+<div class="w-8 h-8 rounded-full bg-surface-container-high border border-border-subtle flex items-center justify-center shrink-0 mt-1">
+<span class="material-symbols-outlined text-sm text-on-surface-muted">person</span>
+</div>
+<div>
+<div class="font-label-mono text-label-mono text-on-surface-muted mb-1">Caller • 00:12</div>
+<div class="bg-surface border border-border-subtle p-3 rounded-2xl rounded-tl-sm text-on-surface shadow-sm">
+                                            Hi, mera credit card block ho gaya hai. Mujhe unblock karwana hai.
+                                        </div>
+</div>
+</div>
+<div class="flex gap-4 max-w-[85%] ml-auto justify-end z-10">
+<div class="text-right">
+<div class="font-label-mono text-label-mono text-primary mb-1">Agent AI • 00:15</div>
+<div class="bg-primary-container text-on-primary p-3 rounded-2xl rounded-tr-sm shadow-sm">
+                                            Namaste. Main aapki sahayata kar sakti hoon. Credit card unblock karne ke liye, kripya apni details confirm karein. Aapka registered number yahi hai?
+                                        </div>
+</div>
+<div class="w-8 h-8 rounded-full bg-primary-fixed border border-primary-fixed-dim flex items-center justify-center shrink-0 mt-1">
+<span class="material-symbols-outlined text-sm text-primary">smart_toy</span>
+</div>
+</div>
+<div class="flex gap-4 max-w-[85%] z-10">
+<div class="w-8 h-8 rounded-full bg-surface-container-high border border-border-subtle flex items-center justify-center shrink-0 mt-1">
+<span class="material-symbols-outlined text-sm text-on-surface-muted">person</span>
+</div>
+<div>
+<div class="font-label-mono text-label-mono text-on-surface-muted mb-1">Caller • 00:28</div>
+<div class="bg-surface border border-border-subtle p-3 rounded-2xl rounded-tl-sm text-on-surface shadow-sm">
+                                            Haan, yahi number hai. Mujhe jaldi transaction karni thi.
+                                        </div>
+</div>
+</div>
+<div class="flex gap-4 max-w-[85%] ml-auto justify-end z-10">
+<div class="text-right">
+<div class="font-label-mono text-label-mono text-primary mb-1">Agent AI • 00:32</div>
+<div class="bg-primary-container text-on-primary p-3 rounded-2xl rounded-tr-sm shadow-sm relative overflow-hidden group">
+                                            Main samajh sakti hoon. Security check ke liye, kripya apni date of birth aur aakhri transaction amount bataiye.
+                                            <div class="absolute left-0 bottom-0 h-1 bg-white/30 w-full">
+<div class="h-full bg-white/80 w-1/3 animate-[pulse_1s_ease-in-out_infinite]"></div>
+</div>
+</div>
+</div>
+<div class="w-8 h-8 rounded-full bg-primary-fixed border border-primary-fixed-dim flex items-center justify-center shrink-0 mt-1 relative">
+<span class="absolute inset-0 border-2 border-primary rounded-full animate-ping opacity-20"></span>
+<span class="material-symbols-outlined text-sm text-primary">smart_toy</span>
+</div>
+</div>
+</div>
+<!-- Pipeline Status Footer -->
+<div class="bg-surface-container-low border-t border-border-subtle p-3 flex justify-between items-center shrink-0 overflow-x-auto hide-scrollbar">
+<div class="flex gap-6 min-w-max">
+<div class="flex items-center gap-2">
+<span class="font-label-mono text-label-mono text-on-surface-muted uppercase">VoIP</span>
+<div class="flex items-center gap-1 bg-emerald-50 text-status-emerald border border-emerald-100 px-2 py-0.5 rounded text-xs font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-status-emerald"></span> Online
+                                        </div>
+</div>
+<div class="w-px h-4 bg-border-subtle self-center"></div>
+<div class="flex items-center gap-2">
+<span class="font-label-mono text-label-mono text-on-surface-muted uppercase">ASR</span>
+<div class="flex items-center gap-1 bg-emerald-50 text-status-emerald border border-emerald-100 px-2 py-0.5 rounded text-xs font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-status-emerald"></span> Online
+                                        </div>
+</div>
+<div class="w-px h-4 bg-border-subtle self-center"></div>
+<div class="flex items-center gap-2">
+<span class="font-label-mono text-label-mono text-on-surface-muted uppercase">Gemini</span>
+<div class="flex items-center gap-1 bg-blue-50 text-primary border border-blue-100 px-2 py-0.5 rounded text-xs font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span> Connected
+                                        </div>
+</div>
+<div class="w-px h-4 bg-border-subtle self-center"></div>
+<div class="flex items-center gap-2">
+<span class="font-label-mono text-label-mono text-on-surface-muted uppercase">TTS</span>
+<div class="flex items-center gap-1 bg-emerald-50 text-status-emerald border border-emerald-100 px-2 py-0.5 rounded text-xs font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-status-emerald"></span> Online
+                                        </div>
+</div>
+</div>
+</div>
+</div>
+<!-- Tech Specs & Settings Bento -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+<div class="bg-surface border border-border-subtle rounded-lg p-4 flex flex-col gap-2 shadow-ambient">
+<span class="material-symbols-outlined text-on-surface-muted text-lg">mic</span>
+<h4 class="font-label-mono text-label-mono text-on-surface-muted uppercase">Audio In</h4>
+<p class="font-body-md text-body-md text-on-surface font-medium">16 kHz PCM</p>
+</div>
+<div class="bg-surface border border-border-subtle rounded-lg p-4 flex flex-col gap-2 shadow-ambient">
+<span class="material-symbols-outlined text-on-surface-muted text-lg">hearing</span>
+<h4 class="font-label-mono text-label-mono text-on-surface-muted uppercase">ASR Model</h4>
+<p class="font-body-md text-body-md text-on-surface font-medium">Nemotron 3.5</p>
+</div>
+<div class="bg-surface border border-border-subtle rounded-lg p-4 flex flex-col gap-2 shadow-ambient">
+<span class="material-symbols-outlined text-primary text-lg">memory</span>
+<h4 class="font-label-mono text-label-mono text-primary uppercase font-bold">AI Engine</h4>
+<p class="font-body-md text-body-md text-on-surface font-medium">Gemini Live</p>
+</div>
+<div class="bg-surface border border-border-subtle rounded-lg p-4 flex flex-col gap-2 shadow-ambient">
+<span class="material-symbols-outlined text-on-surface-muted text-lg">volume_up</span>
+<h4 class="font-label-mono text-label-mono text-on-surface-muted uppercase">Audio Out</h4>
+<p class="font-body-md text-body-md text-on-surface font-medium">24 kHz Opus</p>
+</div>
+</div>
+<!-- Recent Calls Table -->
+<div class="bg-surface border border-border-subtle rounded-xl shadow-ambient overflow-hidden">
+<div class="p-4 border-b border-border-subtle bg-surface-container-lowest">
+<h3 class="font-headline-md text-headline-md font-semibold">Recent Calls</h3>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-border-subtle">
+<th class="p-4 font-label-mono text-label-mono text-on-surface-muted uppercase font-semibold">Number</th>
+<th class="p-4 font-label-mono text-label-mono text-on-surface-muted uppercase font-semibold">Duration</th>
+<th class="p-4 font-label-mono text-label-mono text-on-surface-muted uppercase font-semibold">Intent</th>
+<th class="p-4 font-label-mono text-label-mono text-on-surface-muted uppercase font-semibold">Resolution</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-body-sm text-on-surface">
+<tr class="border-b border-border-subtle hover:bg-surface-container-lowest transition-colors h-[52px]">
+<td class="p-4 font-medium flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-status-emerald animate-pulse"></div>
+                                                +91 98XXX XXXXX
+                                            </td>
+<td class="p-4 text-on-surface-variant">01:42 (Live)</td>
+<td class="p-4"><span class="bg-surface-container-high text-on-surface px-2 py-1 rounded border border-border-subtle">Unblock Card</span></td>
+<td class="p-4 text-primary font-medium">In Progress</td>
+</tr>
+<tr class="border-b border-border-subtle hover:bg-surface-container-lowest transition-colors h-[52px]">
+<td class="p-4 font-medium">+91 91XXX XXXXX</td>
+<td class="p-4 text-on-surface-variant">04:15</td>
+<td class="p-4"><span class="bg-surface-container-high text-on-surface px-2 py-1 rounded border border-border-subtle">Check Balance</span></td>
+<td class="p-4 text-status-emerald font-medium">Resolved</td>
+</tr>
+<tr class="border-b border-border-subtle hover:bg-surface-container-lowest transition-colors h-[52px]">
+<td class="p-4 font-medium">+91 99XXX XXXXX</td>
+<td class="p-4 text-on-surface-variant">02:30</td>
+<td class="p-4"><span class="bg-surface-container-high text-on-surface px-2 py-1 rounded border border-border-subtle">Loan Enquiry</span></td>
+<td class="p-4 text-on-surface-variant">Transferred</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Right Column: System Health Sidebar (Spans 4 cols) -->
+<div class="lg:col-span-4 flex flex-col gap-6">
+<div class="bg-surface border border-border-subtle rounded-xl shadow-ambient overflow-hidden flex flex-col h-full max-h-[840px]">
+<div class="p-5 border-b border-border-subtle bg-surface-container-lowest flex justify-between items-center">
+<h3 class="font-headline-md text-headline-md font-semibold flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">analytics</span>
+                                    System Health
+                                </h3>
+<span class="bg-emerald-50 text-status-emerald border border-emerald-100 font-label-mono text-[10px] px-2 py-1 rounded uppercase font-bold">Stable</span>
+</div>
+<div class="p-5 flex-1 overflow-y-auto flex flex-col gap-8">
+<!-- Resource Usage -->
+<div>
+<h4 class="font-label-mono text-label-mono text-on-surface-muted uppercase mb-4 tracking-wide">Resource Usage</h4>
+<div class="space-y-5">
+<!-- CPU -->
+<div>
+<div class="flex justify-between items-end mb-2">
+<span class="font-body-sm text-body-sm font-medium">CPU Core Usage</span>
+<span class="font-label-mono text-label-mono font-bold text-on-surface">78%</span>
+</div>
+<div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden border border-border-subtle">
+<div class="bg-primary h-full rounded-full w-[78%]"></div>
+</div>
+</div>
+<!-- Memory -->
+<div>
+<div class="flex justify-between items-end mb-2">
+<span class="font-body-sm text-body-sm font-medium">Memory (RAM)</span>
+<span class="font-label-mono text-label-mono font-bold text-on-surface">5.2 / 8 GB</span>
+</div>
+<div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden border border-border-subtle">
+<div class="bg-secondary h-full rounded-full w-[65%]"></div>
+</div>
+</div>
+</div>
+</div>
+<hr class="border-border-subtle">
+<!-- Service Status List -->
+<div>
+<h4 class="font-label-mono text-label-mono text-on-surface-muted uppercase mb-4 tracking-wide">Service Status</h4>
+<ul class="space-y-3 font-body-sm text-body-sm">
+<li class="flex items-center justify-between p-2 rounded hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-muted text-[20px]">public</span>
+<span class="font-medium">Internet Connection</span>
+</div>
+<div class="flex items-center gap-1.5 text-status-emerald">
+<span class="w-2 h-2 rounded-full bg-status-emerald"></span>
+<span class="font-label-mono text-[10px] uppercase font-bold">Optimal</span>
+</div>
+</li>
+<li class="flex items-center justify-between p-2 rounded hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-muted text-[20px]">router</span>
+<span class="font-medium">VoIP Gateway</span>
+</div>
+<div class="flex items-center gap-1.5 text-status-emerald">
+<span class="w-2 h-2 rounded-full bg-status-emerald"></span>
+<span class="font-label-mono text-[10px] uppercase font-bold">Stable</span>
+</div>
+</li>
+<li class="flex items-center justify-between p-2 rounded hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-muted text-[20px]">record_voice_over</span>
+<span class="font-medium">ASR Nodes</span>
+</div>
+<div class="flex items-center gap-1.5 text-status-emerald">
+<span class="w-2 h-2 rounded-full bg-status-emerald"></span>
+<span class="font-label-mono text-[10px] uppercase font-bold">Running (3/3)</span>
+</div>
+</li>
+<li class="flex items-center justify-between p-2 rounded bg-surface-container border border-primary-fixed-dim">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-[20px]">psychology</span>
+<span class="font-medium text-primary font-bold">Gemini API</span>
+</div>
+<div class="flex items-center gap-1.5 text-primary">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span class="font-label-mono text-[10px] uppercase font-bold">Active</span>
+</div>
+</li>
+<li class="flex items-center justify-between p-2 rounded hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-muted text-[20px]">spatial_audio_off</span>
+<span class="font-medium">TTS Engine</span>
+</div>
+<div class="flex items-center gap-1.5 text-status-emerald">
+<span class="w-2 h-2 rounded-full bg-status-emerald"></span>
+<span class="font-label-mono text-[10px] uppercase font-bold">Ready</span>
+</div>
+</li>
+</ul>
+</div>
+<!-- Decorative Server Graph area -->
+<div class="mt-auto pt-4 relative h-32 w-full rounded-lg overflow-hidden border border-border-subtle bg-surface-container-lowest">
+<!-- Using CSS to create a grid/tech pattern background -->
+<div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(#64748b 1px, transparent 1px); background-size: 10px 10px;"></div>
+<div class="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-primary/10 to-transparent"></div>
+<!-- Abstract SVG line mimicking a steady server pulse -->
+<svg class="absolute bottom-0 left-0 w-full h-full text-primary opacity-50" preserveAspectRatio="none" viewBox="0 0 100 100">
+<path class="animate-[pulse_2s_infinite]" d="M0,80 L10,80 L15,70 L20,90 L25,50 L30,80 L100,80" fill="none" stroke="currentColor" stroke-width="2"></path>
+</svg>
+<div class="absolute top-2 left-2">
+<span class="font-label-mono text-[9px] text-on-surface-muted uppercase">Network I/O</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom spacing for scrolling -->
+<div class="h-12 w-full"></div>
+</main>
+</div>
+<script>
+        // Simple auto-scroll to bottom of transcript for realism
+        document.addEventListener("DOMContentLoaded", () => {
+            const transcript = document.getElementById('transcript-container');
+            if (transcript) {
+                transcript.scrollTop = transcript.scrollHeight;
+            }
+        });
+    </script>
+</body></html>
