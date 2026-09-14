@@ -38,7 +38,8 @@ class TestBargeInUnit(unittest.TestCase):
         # Verify all 5 chunks were captured in audio_q
         self.assertEqual(agent.audio_q.qsize(), 5)
         # Verify sample values are intact
-        pulled = agent.audio_q.get_nowait()
+        captured_at, pulled = agent.audio_q.get_nowait()
+        self.assertLessEqual(captured_at, time.perf_counter())
         np.testing.assert_allclose(pulled, test_samples)
 
     def test_playback_immediate_interruption(self):

@@ -246,14 +246,20 @@ class NeMoStreamingASR:
             status = _lib.nemo_speech_asr_stream_next(
                 self._stream, byref(res_handle)
             )
-            if status != 0 or not res_handle:
+            if status != 0:
+                err = _lib.nemo_speech_asr_last_error()
+                raise RuntimeError(
+                    f"Failed to decode ASR stream: {err.decode('utf-8') if err else status}"
+                )
+            if not res_handle:
                 break
 
-            is_final = _lib.nemo_speech_asr_result_is_final(res_handle)
-            text_ptr = _lib.nemo_speech_asr_result_transcript(res_handle, 0)
-            text = text_ptr.decode("utf-8") if text_ptr else ""
-
-            _lib.nemo_speech_asr_result_destroy(res_handle)
+            try:
+                is_final = _lib.nemo_speech_asr_result_is_final(res_handle)
+                text_ptr = _lib.nemo_speech_asr_result_transcript(res_handle, 0)
+                text = text_ptr.decode("utf-8") if text_ptr else ""
+            finally:
+                _lib.nemo_speech_asr_result_destroy(res_handle)
             yield is_final, text
 
     def finish_stream(self):

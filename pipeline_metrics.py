@@ -112,6 +112,7 @@ class TurnMetrics:
     partial_count: int = 0
     audio_bytes: int = 0
     error: Optional[str] = None
+    asr_diagnostics: Dict = field(default_factory=dict)
 
     def mark(self, name: str, value: Optional[float] = None, overwrite: bool = False) -> None:
         """Record a timeline mark. First write wins unless overwrite=True.
@@ -198,6 +199,7 @@ class TurnMetrics:
             "used_final": self.used_final,
             "interim_transcript": self.interim_transcript,
             "final_transcript": self.final_transcript,
+            "asr_diagnostics": self.asr_diagnostics,
             "error": self.error,
         }
 

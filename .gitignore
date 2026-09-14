@@ -21,3 +21,4 @@ models/
 
 # Audio artifacts (existing sample wavs are tracked explicitly via `git add -f`)
 *.wav
+!latency_filler_*.wav

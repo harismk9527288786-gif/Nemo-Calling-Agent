@@ -49,6 +49,7 @@ from __future__ import annotations
 import threading
 import time
 from collections import deque
+from dataclasses import dataclass
 from typing import Callable, List, Optional, Tuple
 
 import numpy as np
@@ -63,14 +64,27 @@ DEFAULT_MAX_AUDIO_ITEMS = 400
 DEFAULT_MAX_RESULTS = 256
 
 
+@dataclass(frozen=True)
+class AsrTurnResult:
+    """A sealed utterance, never an unlabelled interim fallback."""
+
+    text: str = ""
+    interim: str = ""
+    status: str = "empty"
+    queue_wait_ms: float = 0.0
+    flush_ms: float = 0.0
+    error: Optional[str] = None
+
+
 class _Flush:
     """Control message: flush the stream, resolve ``future``, then restart."""
 
-    __slots__ = ("future", "loop")
+    __slots__ = ("future", "loop", "queued_at")
 
     def __init__(self, future, loop):
         self.future = future
         self.loop = loop
+        self.queued_at = time.perf_counter()
 
 
 class _Stop:
@@ -132,6 +146,16 @@ class AsrWorker:
         self.error_count = 0
         self.last_error: Optional[str] = None
         self.decode_seconds = 0.0
+        self.decoded_samples = 0
+        self.max_decode_ms = 0.0
+        self.flush_timeouts = 0
+        # Publication generation changes at enqueue time, not restart time.
+        # Thus a timed-out utterance cannot publish into the next capture.
+        self._generation = 0
+        self._worker_generation = 0
+        self._latest_interim = ""
+        self._final_segments: List[str] = []
+        self._stream_error: Optional[str] = None
 
     # ---------------------------------------------------------------- lifecycle
 
@@ -175,6 +199,14 @@ class AsrWorker:
         """
         n = len(samples)
         with self._cv:
+            if self._stopping:
+                return False
+            # Never let one oversized batch bypass the seconds bound. Reject
+            # it explicitly rather than silently transcribing a clipped tail.
+            if n > self._max_samples:
+                self.submitted_chunks += 1
+                self.dropped_chunks += 1
+                return False
             dropped = False
             # Make room first, so the queue never exceeds either bound. Loop
             # because one dropped chunk may be smaller than the incoming one.
@@ -209,36 +241,36 @@ class AsrWorker:
         return out
 
     async def flush_and_restart(self, timeout: float = 3.0) -> str:
-        """Flush the stream tail and return the final transcript.
+        """Compatibility API. Returns final text only, never an interim."""
+        return (await self.finalize_turn(timeout=timeout)).text
 
-        Ordered behind any audio already queued, so the tail of the utterance
-        is included. Awaits rather than blocking the event loop. On timeout the
-        caller gets "" and should fall back to the interim text; the worker is
-        still instructed to restart, so one slow flush cannot kill the call.
+    async def finalize_turn(self, timeout: float = 8.0) -> AsrTurnResult:
+        """Seal the current generation and await its ordered decode barrier.
+
+        The timeout covers queue drain, native flush AND stream restart. On
+        timeout no guessed transcript is returned. Late publications are fenced
+        out immediately; the ordered barrier still resets the native stream.
         """
         import asyncio
 
         loop = asyncio.get_running_loop()
         future = loop.create_future()
         with self._cv:
+            if self._stopping or self._thread is None or not self._thread.is_alive():
+                return AsrTurnResult(status="error", error="ASR worker is not running")
+            with self._results_lock:
+                self._generation += 1
+                self._results.clear()
             self._q.append(_Flush(future, loop))
             self._cv.notify()
 
         try:
             return await asyncio.wait_for(future, timeout)
         except asyncio.TimeoutError:
-            self.error_count += 1
-            self.last_error = f"flush exceeded {timeout}s"
-            self._on_error(
-                f"flush did not complete within {timeout}s -- falling back to "
-                "interim text for this turn"
-            )
-            return ""
-        except Exception as exc:
-            self.error_count += 1
-            self.last_error = f"{type(exc).__name__}: {exc}"
-            self._on_error(f"flush failed: {self.last_error}")
-            return ""
+            self.flush_timeouts += 1
+            self.last_error = f"flush barrier exceeded {timeout}s"
+            self._on_error(self.last_error)
+            return AsrTurnResult(status="timeout", error=self.last_error)
 
     def stats(self) -> dict:
         with self._cv:
@@ -255,6 +287,12 @@ class AsrWorker:
             "queued_items_at_exit": queued_items,
             "queued_seconds_at_exit": round(queued_seconds, 3),
             "decode_seconds": round(self.decode_seconds, 3),
+            "decoded_audio_seconds": round(self.decoded_samples / self._sample_rate, 3),
+            "decode_rtf": round(self.decode_seconds * self._sample_rate / self.decoded_samples, 3)
+            if self.decoded_samples else None,
+            "max_decode_ms": round(self.max_decode_ms, 1),
+            "flush_timeouts": self.flush_timeouts,
+            "worker_alive": bool(self._thread and self._thread.is_alive()),
             "error_count": self.error_count,
             "last_error": self.last_error,
         }
@@ -284,6 +322,8 @@ class AsrWorker:
 
     def _publish(self, results) -> None:
         with self._results_lock:
+            if self._worker_generation != self._generation:
+                return
             for item in results:
                 if len(self._results) >= self._max_results:
                     # Oldest interims are superseded by newer ones, so dropping
@@ -338,34 +378,56 @@ class AsrWorker:
         except Exception as exc:
             self.error_count += 1
             self.last_error = f"decode: {type(exc).__name__}: {exc}"
+            self._stream_error = self.last_error
             if self.error_count in (1, 10, 100):
                 self._on_error(self.last_error)
             return
         finally:
-            self.decode_seconds += time.perf_counter() - started
+            elapsed = time.perf_counter() - started
+            self.decode_seconds += elapsed
+            self.max_decode_ms = max(self.max_decode_ms, elapsed * 1000)
 
         self.decoded_chunks += 1
+        self.decoded_samples += len(samples)
         if results:
+            self._remember_results(results)
             self._publish(results)
 
-    def _handle_flush(self, flush: _Flush) -> None:
-        """Flush, hand the text back, then reopen the stream.
+    def _remember_results(self, results) -> None:
+        for is_final, text in results:
+            text = str(text or "").strip()
+            if is_final:
+                if text:
+                    self._final_segments.append(text)
+                self._latest_interim = ""
+            elif text:
+                self._latest_interim = text
 
-        The future is resolved *before* the restart so the caller can get on
-        with the LLM request while this thread reopens the stream. Because
-        items are processed in order, any audio submitted after the flush is
-        still handled after the restart completes.
-        """
-        text = ""
-        error: Optional[str] = None
+    def _handle_flush(self, flush: _Flush) -> None:
+        """Finish and restart on the owner thread before resolving the barrier."""
+        started = time.perf_counter()
+        queue_wait_ms = (started - flush.queued_at) * 1000
+        error = self._stream_error
+        interim = self._latest_interim
         try:
-            text = self._asr.final_transcript()
+            # The native convenience final_transcript() can return an interim.
+            # Use typed results instead so used_final really means final.
+            if hasattr(self._asr, "finish_stream"):
+                results = self._asr.finish_stream()
+                self._remember_results(results)
+            else:
+                # Compatibility for legacy recognizers exposing only finals.
+                text = self._asr.final_transcript()
+                self._remember_results([(True, text)])
         except Exception as exc:
-            error = f"final_transcript: {type(exc).__name__}: {exc}"
+            error = f"finish_stream: {type(exc).__name__}: {exc}"
             self.error_count += 1
             self.last_error = error
-
-        self._resolve(flush, text, error)
+        interim = self._latest_interim or interim
+        if self._latest_interim:
+            self._final_segments.append(self._latest_interim)
+            self._latest_interim = ""
+        text = " ".join(self._final_segments)
 
         # Restart unconditionally. If the flush failed we still need a live
         # stream for the next turn -- otherwise one bad flush ends the call.
@@ -378,22 +440,32 @@ class AsrWorker:
             self.error_count += 1
             self.last_error = f"restart start_stream: {type(exc).__name__}: {exc}"
             self._on_error(self.last_error)
+            error = self.last_error
 
-        # A fresh stream means older results describe the previous utterance.
+        self._latest_interim = ""
+        self._final_segments = []
+        self._stream_error = None
         with self._results_lock:
+            self._worker_generation += 1
             self._results.clear()
+        result = AsrTurnResult(
+            text=text if not error else "",
+            interim=interim,
+            status="error" if error else ("final" if text else "empty"),
+            queue_wait_ms=round(queue_wait_ms, 1),
+            flush_ms=round((time.perf_counter() - started) * 1000, 1),
+            error=error,
+        )
+        self._resolve(flush, result)
 
     @staticmethod
-    def _resolve(flush: _Flush, text: str, error: Optional[str]) -> None:
+    def _resolve(flush: _Flush, result: AsrTurnResult) -> None:
         """Complete the caller's future from this thread, safely."""
 
         def _set():
             if flush.future.done():
                 return  # caller already timed out
-            if error is not None:
-                flush.future.set_exception(RuntimeError(error))
-            else:
-                flush.future.set_result(text)
+            flush.future.set_result(result)
 
         try:
             flush.loop.call_soon_threadsafe(_set)

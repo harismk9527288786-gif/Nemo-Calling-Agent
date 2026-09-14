@@ -44,7 +44,7 @@ class SileroVADEndpointer:
         min_speech_duration_ms: float = 96.0,
         barge_in_min_speech_duration_ms: float = 160.0,
         min_silence_duration_ms: float = 300.0,
-        speech_pad_ms: float = 64.0,
+        speech_pad_ms: float = 400.0,
         energy_fallback_threshold: float = 0.015,
         energy_fallback_barge_in_threshold: float = 0.025,
         force_energy_fallback: bool = False,
@@ -139,17 +139,22 @@ class SileroVADEndpointer:
         self._pre_speech_samples = 0
         self._window_buf = np.empty(0, dtype=np.float32)
 
-    def process_chunk(self, chunk: np.ndarray, agent_active: bool = False) -> VADEvent:
+    def process_chunk(self, chunk: np.ndarray, agent_active: bool = False, clear_pad: bool = False) -> VADEvent:
         """Processes an audio chunk (arbitrary sample count) and returns a VADEvent.
 
         Args:
             chunk: 1D float32 numpy array of PCM audio at self.sample_rate.
             agent_active: True if the agent is actively speaking or playing audio.
+            clear_pad: True to clear the pre-speech pad (e.g. during active playback to drop echo).
         """
         if chunk.ndim > 1:
             chunk = chunk.flatten()
         if chunk.dtype != np.float32:
             chunk = chunk.astype(np.float32)
+
+        if clear_pad:
+            self._pre_speech_pad.clear()
+            self._pre_speech_samples = 0
 
         # Append to window buffer
         if len(self._window_buf) == 0:
@@ -210,12 +215,13 @@ class SileroVADEndpointer:
                     self._speech_samples_accum = 0
                     self._speech_chunks_in_flight = []
 
-                    # Maintain circular buffer of pre-speech padding
-                    self._pre_speech_pad.append(window)
-                    self._pre_speech_samples += self.WINDOW_SIZE
-                    while self._pre_speech_samples > self.speech_pad_samples:
-                        popped = self._pre_speech_pad.popleft()
-                        self._pre_speech_samples -= len(popped)
+                    # Maintain circular buffer of pre-speech padding unless clear_pad
+                    if not clear_pad:
+                        self._pre_speech_pad.append(window)
+                        self._pre_speech_samples += self.WINDOW_SIZE
+                        while self._pre_speech_samples > self.speech_pad_samples:
+                            popped = self._pre_speech_pad.popleft()
+                            self._pre_speech_samples -= len(popped)
 
             elif self._state == "IN_SPEECH":
                 event.is_speech = True
@@ -227,16 +233,22 @@ class SileroVADEndpointer:
                 else:
                     # Silence detected during utterance
                     self._silence_samples_accum += self.WINDOW_SIZE
-                    if self._silence_samples_accum >= self.min_silence_samples:
-                        # Turn complete! Endpoint detected!
-                        event.endpoint_detected = True
-                        self._state = "LISTENING"
-                        self._speech_samples_accum = 0
-                        self._silence_samples_accum = 0
-                        self._speech_chunks_in_flight = []
-                        self._pre_speech_pad.clear()
-                        self._pre_speech_samples = 0
-                        self.reset_states()
+                    
+                # Force endpoint if the turn is too long (e.g., 15 seconds)
+                if self._speech_samples_accum >= 15 * self.sample_rate:
+                    print("\n[VAD] Maximum turn length reached. Forcing endpoint.")
+                    self._silence_samples_accum = self.min_silence_samples
+
+                if self._silence_samples_accum >= self.min_silence_samples:
+                    # Turn complete! Endpoint detected!
+                    event.endpoint_detected = True
+                    self._state = "LISTENING"
+                    self._speech_samples_accum = 0
+                    self._silence_samples_accum = 0
+                    self._speech_chunks_in_flight = []
+                    self._pre_speech_pad.clear()
+                    self._pre_speech_samples = 0
+                    self.reset_states()
 
         event.speech_probability = latest_prob
         if output_audio_pieces:

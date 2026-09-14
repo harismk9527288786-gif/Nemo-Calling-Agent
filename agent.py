@@ -47,10 +47,10 @@ ENERGY_THRESHOLD = 0.015
 BARGE_IN_THRESHOLD = 0.06
 BARGE_IN_CONSECUTIVE_FRAMES = 2
 
-# A final NeMo flush can be slower than real time on the target CPU. The
-# interim transcript is usable for a phone turn, so do not freeze microphone
-# processing for the whole decoder backlog.
-ASR_FLUSH_TIMEOUT = 1.50
+# A slow barrier is diagnostic, not permission to send an interim to Gemini.
+ASR_SLOW_SECONDS = 1.50
+ASR_FLUSH_TIMEOUT = 8.0
+ECHO_GUARD_SECONDS = 0.25
 GEMINI_SEND_TIMEOUT = 10.0
 INTERRUPTION_BOUNDARY_TIMEOUT = 0.75
 
@@ -141,8 +141,8 @@ Common questions:
 {faq_lines}
 
 Phone conversation rules:
-1. Speak in natural, everyday Indian Hinglish. Sound like a calm human shop
-   executive, not a scripted chatbot.
+1. Match the caller's Hindi, Hinglish, or English; default to everyday Indian
+   Hinglish. Sound like a calm human shop executive, not a scripted chatbot.
 2. Answer the caller's latest question first. Remember the conversation and do
    not restart the explanation on every turn.
 3. Keep normal replies to one or two short spoken sentences. Ask one useful
@@ -157,7 +157,9 @@ Phone conversation rules:
 7. Never say phrases such as "Refining the Welcome", "I've finalized", "let me
    think", "here is what I will say", or any similar internal draft.
 8. Use only the supplied business information and conversation context. If a
-   fact is unavailable, say that naturally instead of guessing.
+   fact is unavailable, say that naturally instead of guessing. Never invent
+   seating sizes, stock, discounts, or visit bookings. You cannot send WhatsApp
+   messages or book visits: never claim a catalog was sent or a visit confirmed.
 9. Be helpful without aggressive selling. Do not close or end the call yourself.
    Only end when the caller clearly asks to end the call.
 10. The application supplies the opening greeting separately. Follow an exact
@@ -196,7 +198,7 @@ class CallingAgent:
         sarvam_speaker: str = DEFAULT_SARVAM_SPEAKER,
         sarvam_pace: float = 1.20,
         kb_path: str = KB_PATH,
-        disable_barge_in: bool = False,
+        disable_barge_in: bool = True,
     ):
         self.mode = mode.lower()
         self.gemini_voice = gemini_voice
@@ -214,7 +216,7 @@ class CallingAgent:
         except Exception:
             pass
 
-        self.audio_q: queue.Queue[np.ndarray] = queue.Queue(maxsize=200)
+        self.audio_q: queue.Queue = queue.Queue(maxsize=200)
         self.is_running = False
         self.is_speaking = False
         self.barge_in_active = False
@@ -240,6 +242,9 @@ class CallingAgent:
         self._audio_chunks_received = 0
         self._awaiting_first_meaningful_input = True
         self._input_dropped = 0
+        self._input_overflows = 0
+        self._echo_suppressed = 0
+        self._mic_resume_after = 0.0
 
         self.api_key = self._load_secret("GEMINI_API_KEY", "gemini_api_key.txt")
         if not self.api_key:
@@ -327,25 +332,44 @@ class CallingAgent:
 
     def _audio_callback(self, indata, frames, time_info, status):
         """Sounddevice callback: normalize only, never run inference or I/O."""
-        del frames, time_info, status
+        del frames, time_info
+        captured_at = time.perf_counter()
+        if status and getattr(status, "input_overflow", False):
+            self._input_overflows += 1
+        # Gate at capture time is removed. We process all audio in the event loop
+        # to maintain accurate VAD noise floors and allow barge-in.
         if indata.ndim > 1 and indata.shape[1] > 1:
             samples = np.mean(indata, axis=1, dtype=np.float32)
         else:
             samples = indata.copy().flatten().astype(np.float32)
 
         try:
-            self.audio_q.put_nowait(samples)
+            self.audio_q.put_nowait((captured_at, samples))
         except queue.Full:
             # Keep the newest audio. A blocked callback would create a much
             # worse failure mode than dropping one stale capture block.
             try:
                 self.audio_q.get_nowait()
+                self._input_dropped += 1
             except queue.Empty:
                 pass
             try:
-                self.audio_q.put_nowait(samples)
+                self.audio_q.put_nowait((captured_at, samples))
             except queue.Full:
                 self._input_dropped += 1
+
+    async def _finalize_asr_turn(self, turn_id: str):
+        task = asyncio.create_task(self.asr_worker.finalize_turn(timeout=ASR_FLUSH_TIMEOUT))
+        try:
+            try:
+                return await asyncio.wait_for(asyncio.shield(task), ASR_SLOW_SECONDS)
+            except asyncio.TimeoutError:
+                self._emit_turn_event(turn_id, "ASR_SLOW", json.dumps(self.asr_worker.stats()))
+                return await task
+        finally:
+            if not task.done():
+                task.cancel()
+                await asyncio.gather(task, return_exceptions=True)
 
     def _next_turn_id(self, prefix: str = "TURN") -> str:
         self._turn_sequence += 1
@@ -595,7 +619,12 @@ class CallingAgent:
                 model_turn = getattr(server_content, "model_turn", None)
                 parts = getattr(model_turn, "parts", None) if model_turn else None
                 for part in parts or []:
+                    if getattr(part, "thought", False):
+                        continue
                     inline_data = getattr(part, "inline_data", None)
+                    mime = getattr(inline_data, "mime_type", "") or ""
+                    if not mime.lower().startswith("audio/pcm"):
+                        continue
                     audio_data = getattr(inline_data, "data", None)
                     if not audio_data:
                         continue
@@ -653,13 +682,29 @@ class CallingAgent:
                         self._interruption_boundary_event.set()
                     self._finish_turn(turn_id)
 
-            # A receive iterator ending without cancellation means the Live
-            # socket is no longer usable. Surface it instead of silently
-            # leaving the call listening forever.
             if self.is_running and not self._stop_requested:
-                failure = ConnectionError("Gemini Live receive stream ended")
-                self._emit_turn_error(self.current_turn_id, "gemini_receive", failure)
-                self._session_failure = failure
+                print("\n[Agent] Call pending end. Waiting up to 5 seconds for customer response...")
+                self._agent_task = asyncio.create_task(asyncio.sleep(0.0))  # clear task
+                # Wait for 5 seconds. If the customer speaks, `capture["turn"]` will become not None.
+                for _ in range(50):
+                    if not self.is_running or self._stop_requested:
+                        break
+                    
+                    # If customer spoke, trigger reconnect
+                    if capture_obj := getattr(self, "_grace_capture", None):
+                        if capture_obj["turn"] is not None:
+                            print("\n[Agent] Speech detected during grace period! Resuming...")
+                            failure = ConnectionError("Reconnect required for barge-in after goodbye")
+                            self._emit_turn_error(self.current_turn_id, "gemini_receive", failure)
+                            self._session_failure = failure
+                            return
+                    
+                    await asyncio.sleep(0.1)
+
+                if self.is_running and not self._stop_requested:
+                    failure = ConnectionError("Grace period expired, stream closed")
+                    self._emit_turn_error(self.current_turn_id, "gemini_receive", failure)
+                    self._session_failure = failure
         except asyncio.CancelledError:
             print("[Agent] Receive loop cancelled.")
             if self.playback is not None:
@@ -681,6 +726,9 @@ class CallingAgent:
         turn_id: Optional[str] = None,
     ):
         """Send one completed caller turn to the persistent native-audio model."""
+        if not user_transcript or not user_transcript.strip():
+            self._emit_turn_event(turn_id, "SEND_SKIPPED", "reason=empty_transcript")
+            return
         if turn_id is None:
             turn_id = self._next_turn_id()
         if self._send_lock is None:
@@ -794,6 +842,8 @@ class CallingAgent:
             "connectionclosed" in name
             or "websocket" in name
             or "keepalive ping timeout" in detail
+            or "grace period" in detail
+            or "reconnect required" in detail
             or "no close frame" in detail
             or "1011" in detail
             or "connection reset" in detail
@@ -876,8 +926,18 @@ class CallingAgent:
 
         in_stream = None
         try:
+            if self.vad.using_fallback:
+                raise RuntimeError("Silero VAD is unavailable; refusing noise-prone energy-only calling mode")
             dev_info = sd.query_devices(device, "input")
-            in_channels = min(2, max(1, int(dev_info.get("max_input_channels", 1))))
+            # Request mono explicitly; averaging arbitrary stereo device channels
+            # can attenuate speech or cancel opposite-phase channels.
+            in_channels = 1
+            self._emit_turn_event(None, "INPUT_DEVICE", json.dumps({
+                "name": dev_info.get("name"), "sample_rate": SAMPLE_RATE,
+                "channels": in_channels, "block_samples": CHUNK_SAMPLES,
+                "default_sample_rate": dev_info.get("default_samplerate"),
+                "barge_in_disabled": self.disable_barge_in,
+            }))
             in_stream = sd.InputStream(
                 samplerate=SAMPLE_RATE,
                 channels=in_channels,
@@ -915,6 +975,7 @@ class CallingAgent:
                     self._receive_task = asyncio.create_task(
                         self._receive_loop(live_session)
                     )
+                    await asyncio.sleep(0.05)
 
                     self.asr_worker = AsrWorker(
                         self.asr,
@@ -948,12 +1009,20 @@ class CallingAgent:
                         "transcript": "",
                         "last_printed": "",
                         "open": False,
+                        "input_dropped_start": 0,
+                        "input_overflows_start": 0,
                     }
+                    self._grace_capture = capture
 
                     def ensure_caller_turn() -> Any:
                         if capture["turn"] is None:
                             capture["turn"] = self.metrics.start_turn(kind="caller")
                             capture["turn_id"] = self._next_turn_id("TURN_CALLER")
+                            capture["diagnostic_start"] = self.asr_worker.stats()
+                            capture["max_capture_age_ms"] = 0.0
+                            capture["energy_sum"] = 0.0
+                            capture["peak"] = 0.0
+                            self._emit_turn_event(capture["turn_id"], "VAD_START")
                         return capture["turn"]
 
                     def reset_capture() -> None:
@@ -965,6 +1034,8 @@ class CallingAgent:
                                 "transcript": "",
                                 "last_printed": "",
                                 "open": False,
+                                "input_dropped_start": self._input_dropped,
+                                "input_overflows_start": self._input_overflows,
                             }
                         )
                         self.vad.reset()
@@ -997,26 +1068,44 @@ class CallingAgent:
 
                         self._mark_turn(caller_turn, "turn_fired")
                         interim_text = str(capture["transcript"]).strip()
-                        final_text = ""
-                        if self.asr_worker is not None:
-                            # A short flush preserves natural turn latency.
-                            # If the CPU decoder is still draining, use the
-                            # already observed interim rather than freezing
-                            # the call for several seconds.
-                            final_text = await self.asr_worker.flush_and_restart(
-                                timeout=ASR_FLUSH_TIMEOUT
-                            )
-                        user_text = (final_text or interim_text).strip()
-
-                        caller_turn.interim_transcript = interim_text
+                        before = self.asr_worker.stats()
+                        self._emit_turn_event(caller_id, "VAD_END", json.dumps({
+                            "audio_seconds": capture["audio_samples"] / SAMPLE_RATE,
+                            "asr": before,
+                        }))
+                        result = await self._finalize_asr_turn(caller_id)
+                        after = self.asr_worker.stats()
+                        lost_audio = (
+                            after["dropped_chunks"] > capture["diagnostic_start"]["dropped_chunks"]
+                            or self._input_dropped > capture["input_dropped_start"]
+                            or self._input_overflows > capture["input_overflows_start"]
+                        )
+                        final_text = result.text.strip()
+                        user_text = final_text if result.status == "final" and not lost_audio else ""
+                        diagnostics = {
+                            "status": "audio_loss" if lost_audio else result.status,
+                            "queue_wait_ms": result.queue_wait_ms,
+                            "flush_ms": result.flush_ms,
+                            "audio_seconds": capture["audio_samples"] / SAMPLE_RATE,
+                            "max_capture_age_ms": round(capture["max_capture_age_ms"], 1),
+                            "rms": round((capture["energy_sum"] / capture["audio_samples"]) ** 0.5, 5),
+                            "peak": round(capture["peak"], 5),
+                            "input_dropped_total": self._input_dropped,
+                            "input_overflows_total": self._input_overflows,
+                            "echo_suppressed_total": self._echo_suppressed,
+                            "before": before, "after": after,
+                        }
+                        self._emit_turn_event(caller_id, "ASR_DIAGNOSTICS", json.dumps(diagnostics))
+                        caller_turn.asr_diagnostics = diagnostics
+                        caller_turn.interim_transcript = result.interim or interim_text
                         caller_turn.final_transcript = final_text
-                        caller_turn.used_final = bool(final_text)
+                        caller_turn.used_final = bool(user_text)
 
                         if not user_text:
                             self._emit_turn_event(
                                 caller_id,
                                 "ASR_EMPTY",
-                                f"reason=no_transcript audio_samples={capture['audio_samples']}",
+                                f"reason={diagnostics['status']} audio_samples={capture['audio_samples']}",
                             )
                             await self._end_barge_in(
                                 live_session,
@@ -1026,7 +1115,7 @@ class CallingAgent:
                             self._finish_turn(
                                 caller_id,
                                 caller_turn,
-                                error="ASR returned no transcript",
+                                error=f"ASR rejected turn: {diagnostics['status']}",
                             )
                             reset_capture()
                             return
@@ -1081,29 +1170,43 @@ class CallingAgent:
                         if self._session_failure is not None:
                             raise self._session_failure
 
+                        # Echo is rejected by _audio_callback at capture time.
+                        # Audio already admitted to the queue is caller audio,
+                        # even if a reply starts before we get around to it.
+                        # Leave it queued until generation AND playback finish;
+                        # never dequeue and discard it based on current state.
                         chunk_batch = []
-                        while True:
-                            try:
-                                chunk_batch.append(self.audio_q.get_nowait())
-                            except queue.Empty:
-                                break
+                        capture_age_ms = 0.0
+                        try:
+                            captured_at, chunk = self.audio_q.get_nowait()
+                            capture_age_ms = (time.perf_counter() - captured_at) * 1000
+                            chunk_batch.append(chunk)
+                        except queue.Empty:
+                            pass
 
                         endpoint_detected = False
                         if chunk_batch:
                             to_submit = []
 
                             for chunk in chunk_batch:
-                                agent_active = (
-                                    self.is_speaking
-                                    or (
-                                        self.playback is not None
-                                        and self.playback.is_playing()
-                                    )
-                                )
-                                vad_agent_active = agent_active
+                                # In half-duplex mode capture-time admission is
+                                # authoritative. Only experimental barge-in uses
+                                # current playback state to classify speech.
+                                agent_active = self.is_speaking or (self.playback is not None and self.playback.is_playing())
+                                if agent_active:
+                                    self._agent_active_until = time.perf_counter() + ECHO_GUARD_SECONDS
+                                vad_agent_active = agent_active or time.perf_counter() < getattr(self, "_agent_active_until", 0)
+                                
+                                if vad_agent_active and not getattr(self, "_was_agent_active", False):
+                                    # Agent just started speaking! Force endpoint any open turn.
+                                    if capture["turn"] is not None:
+                                        await finalize_caller_turn()
+                                self._was_agent_active = vad_agent_active
+
                                 event = self.vad.process_chunk(
                                     chunk,
                                     agent_active=vad_agent_active,
+                                    clear_pad=(self.playback is not None and self.playback.is_playing()),
                                 )
 
                                 # A normal caller turn starts when VAD confirms
@@ -1117,11 +1220,10 @@ class CallingAgent:
                                         live_session,
                                         capture["turn_id"],
                                     )
-                                    agent_active = False
+                                    vad_agent_active = False
+                                    self._agent_active_until = 0
 
-                                if not (
-                                    agent_active and self.disable_barge_in
-                                ):
+                                if not (vad_agent_active and self.disable_barge_in):
                                     if event.speech_start or event.is_speech:
                                         caller_turn = ensure_caller_turn()
                                         capture["open"] = True
@@ -1129,21 +1231,18 @@ class CallingAgent:
                                             caller_turn,
                                             "speech_started",
                                         )
-                                        self._mark_turn(
-                                            caller_turn,
-                                            "last_voice",
-                                            overwrite=True,
-                                        )
+                                        if event.speech_start or event.speech_probability >= self.vad.silence_threshold:
+                                            self._mark_turn(caller_turn, "last_voice", overwrite=True)
 
                                 if event.audio_for_asr is not None:
                                     # After a confirmed barge-in, accept the
                                     # same capture block's onset audio. Without
                                     # this, the first consonant can be lost.
                                     can_capture = (
-                                        not agent_active or capture["open"]
+                                        not vad_agent_active or capture["open"]
                                     )
                                     if can_capture and not (
-                                        agent_active and self.disable_barge_in
+                                        vad_agent_active and self.disable_barge_in
                                     ):
                                         to_submit.append(event.audio_for_asr)
 
@@ -1159,11 +1258,15 @@ class CallingAgent:
                                 accepted_without_drop = self.asr_worker.submit_audio(
                                     submitted
                                 )
-                                # submit_audio always queues the new block; a
-                                # False result means an older block was
-                                # dropped to make room.
+                                # False means audio loss (an old block evicted,
+                                # or an oversized new block rejected).
                                 if capture["turn"] is not None:
                                     capture["audio_samples"] += len(submitted)
+                                    capture["energy_sum"] += float(np.sum(submitted ** 2, dtype=np.float64))
+                                    capture["peak"] = max(capture["peak"], float(np.max(np.abs(submitted))))
+                                    capture["max_capture_age_ms"] = max(
+                                        capture["max_capture_age_ms"], capture_age_ms
+                                    )
                                 if not accepted_without_drop:
                                     self._emit_turn_event(
                                         capture["turn_id"],
@@ -1175,9 +1278,9 @@ class CallingAgent:
                                 for is_final, transcript in self.asr_worker.drain_results():
                                     del is_final
                                     text = str(transcript or "").strip()
-                                    if not text:
+                                    if not text or capture["turn"] is None:
                                         continue
-                                    caller_turn = ensure_caller_turn()
+                                    caller_turn = capture["turn"]
                                     capture["transcript"] = text
                                     if text != capture["last_printed"]:
                                         print(
@@ -1192,7 +1295,7 @@ class CallingAgent:
                         if endpoint_detected and capture["turn"] is not None:
                             await finalize_caller_turn()
 
-                        await asyncio.sleep(0.01)
+                        await asyncio.sleep(0 if chunk_batch else 0.01)
 
         finally:
             self.is_running = False
@@ -1310,11 +1413,16 @@ if __name__ == "__main__":
         help="Legacy Sarvam speaker compatibility option",
     )
     parser.add_argument("--kb", type=str, default=KB_PATH, help="Knowledge base JSON path")
-    parser.add_argument(
-        "--disable-barge-in",
-        action="store_true",
-        help="Ignore speaker echo/interruptions while the agent is speaking",
+    barge = parser.add_mutually_exclusive_group()
+    barge.add_argument(
+        "--disable-barge-in", dest="disable_barge_in", action="store_true",
+        help="Ignore speaker echo/interruptions (default)",
     )
+    barge.add_argument(
+        "--enable-barge-in", dest="disable_barge_in", action="store_false",
+        help="Experimental: allow interruptions; use headphones to avoid echo",
+    )
+    parser.set_defaults(disable_barge_in=True)
     args = parser.parse_args()
 
     agent = CallingAgent(
