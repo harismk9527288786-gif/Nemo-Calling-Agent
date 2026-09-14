@@ -1,0 +1,46 @@
+{
+  "business": {
+    "name": "General Business Services",
+    "owner_or_brand": "General Business",
+    "instagram": "@business_handle",
+    "location": {
+      "address": "123 Business Avenue, City Center",
+      "landmark": "Near Central Metro Station",
+      "city": "Metro City",
+      "parking": "Parking available",
+      "timings": "9:00 AM to 8:00 PM (Monday to Saturday)"
+    },
+    "contact": {
+      "phone": "+91 9800000000",
+      "alternate_phone": "+91 9800000001",
+      "whatsapp": "+91 9800000000"
+    }
+  },
+  "sales_assistant": {
+    "name": "Alex",
+    "persona": "Energetic, polite, and helpful calling assistant. Speaks natural conversational Hinglish."
+  },
+  "products_and_pricing": [
+    {
+      "category": "Core Service / Product A",
+      "starting_price": "₹1,999",
+      "features": "Premium quality standard package.",
+      "warranty": "1-year warranty / guarantee"
+    },
+    {
+      "category": "Core Service / Product B",
+      "starting_price": "₹4,999",
+      "features": "Advanced enterprise package.",
+      "warranty": "2-year warranty / guarantee"
+    }
+  ],
+  "special_offers": {
+    "promotional_deal": "Special introductory discount for new callers.",
+    "support": "Free customer onboarding and consultation.",
+    "payment_options": "UPI, Credit/Debit Cards, Net Banking."
+  },
+  "common_faqs": {
+    "how_to_reach": "Located at central market, easily accessible by metro or car.",
+    "catalog_request": "Offer to immediately send brochure PDF and location pin to their WhatsApp."
+  }
+}
